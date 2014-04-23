@@ -11,8 +11,8 @@ if __name__ == '__main__':
 
     r = rospy.Rate(10)
     while not rospy.is_shutdown():
-    	br.sendTransform((.1,0,.1),
-                     tf.transformations.quaternion_from_euler(0, 1.57, 0),
+    	br.sendTransform((.063,0,.15),
+                     tf.transformations.quaternion_from_euler(-1.57, 0, -1.57),
                      rospy.Time.now(),
                      "usb_cam",
                      "robot")

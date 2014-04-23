@@ -1,0 +1,16 @@
+#Format:
+#** <obj_name>
+#** <obj_pattern filename> relative to this file
+#** <marker_width> in MM
+#** <centerX centerY>
+
+#the number of patterns to be recognized don't modify this line/ Cantidad de marcas a ser detectadas no modificar esta linea
+1
+
+LOVE
+data/morris/love.pat
+300
+0.0 0.0
+
+
+

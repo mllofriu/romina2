@@ -1,0 +1,32 @@
+#Format:
+#** <obj_name>
+#** <obj_pattern filename> relative to this file
+#** <marker_width> in MM
+#** <centerX centerY>
+
+#the number of patterns to be recognized don't modify this line/ Cantidad de marcas a ser detectadas no modificar esta linea
+4
+
+M1
+data/morris/m1.pat
+150
+0.0 0.0
+
+M2
+data/morris/m2.pat
+150
+0.0 0.0
+
+M3
+data/morris/m3.pat
+150
+0.0 0.0
+
+M4
+data/morris/m4.pat
+150
+0.0 0.0
+
+
+
+
