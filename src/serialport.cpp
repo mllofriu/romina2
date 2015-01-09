@@ -34,13 +34,14 @@ memset(&terminalAttributes, 0, sizeof(struct termios));
 *
 *  control modes: c_cflag flag constants:
 *
-* 57600 bauds
+* 1000000 bauds
 * 8 bits per word
 * Ignore modem control lines.
 * Enable receiver.
 */
  
 terminalAttributes.c_cflag = B1000000 | CS8 | CLOCAL | CREAD;
+//terminalAttributes.c_cflag = B115200 | CS8 | CLOCAL | CREAD;
  
 /*
 * input modes: c_iflag flag constants:
