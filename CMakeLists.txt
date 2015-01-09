@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   roscpp
   std_msgs
+  tf
 )
 
 ## System dependencies are found with CMake's conventions
@@ -104,13 +105,16 @@ include_directories(
 
 ## Declare a cpp executable
 add_executable(pilot src/pilot.cpp src/serialport.cpp)
-
+add_executable(configmotors src/configmotors.cpp src/serialport.cpp)
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(romina2_node romina2_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(pilot
+   ${catkin_LIBRARIES}
+)
+target_link_libraries(configmotors
    ${catkin_LIBRARIES}
 )
 

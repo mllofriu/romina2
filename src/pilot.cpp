@@ -2,6 +2,10 @@
 #include "serialport.h"
 #include "pilot.h"
 
+
+#define MOTOR1 16
+#define MOTOR2 18
+
 Pilot::Pilot(){
   if (serialPort.connect("/dev/ttyUSB0")!=0) {
     printf ("Serial port opened\n");
@@ -12,14 +16,19 @@ Pilot::Pilot(){
 
   ros::NodeHandle n;
 
-  //http://answers.ros.org/question/108551/using-subscribercallback-function-inside-of-a-class-c/
-  ros::Subscriber sub = n.subscribe("/cmd_vel", 1, &Pilot::velCallback, this);
+  vel = geometry_msgs::Twist::ConstPtr(new geometry_msgs::Twist());
 
-  ros::spin();
+  //http://answers.ros.org/question/108551/using-subscribercallback-function-inside-of-a-class-c/
+  sub = n.subscribe("/cmd_vel", 1, &Pilot::velCallback, this);
+
+  // Send an initial transform with odometry 0
+  tf::Transform transform(tf::Quaternion(tf::Vector3(0,0,1), 0));
+  lastcheck = ros::Time::now();
+  tfbr.sendTransform(tf::StampedTransform(transform, lastcheck, "/map", "/odom"));
 }
 
 Pilot::~Pilot(){
-  sendVels(1,0,0, 2,0,0);
+  sendVels(MOTOR1,0,0, MOTOR2,0,0);
   serialPort.disconnect();
 }
 /**
@@ -27,31 +36,31 @@ Pilot::~Pilot(){
  */
 void Pilot::velCallback(const geometry_msgs::Twist::ConstPtr& velmsg)
 {
-  ROS_INFO("I heard: x=[%f]", velmsg->linear.x);
+  ROS_INFO("Received vel");
+
+  vel = velmsg;
 
   // 1m, 512 -> 7.7s => 512 -> 1/7.7 m/s => tics = 512 / .12987 
-  int forwardvel = round(velmsg->linear.x * TO_METERS_PER_SEC_FWD);
-  
-  ROS_INFO("Forward velocity: x=[%d]", forwardvel);
+  int forwardvel = -round(velmsg->linear.x * TO_METERS_PER_SEC_FWD);
 
   int rotvel = velmsg->angular.z * TO_RADS_PER_SEC_ROT;
 
   int vel1 = forwardvel + rotvel;
   int vel2 = (forwardvel - rotvel) * STRAIGHT_CORRECTION;
 
-  if (vel1 > 4095)
-    vel1 = 4095;
-  if (vel1 < -4095)
-    vel1 = -4095;
-  if (vel2 > 4095)
-    vel2 = 4095;
-  if (vel2 < -4095)
-    vel2 = -4095;
+  if (vel1 > 1023)
+    vel1 = 1023;
+  if (vel1 < -1023)
+    vel1 = -1023;
+  if (vel2 > 1023)
+    vel2 = 1023;
+  if (vel2 < -1023)
+    vel2 = -1023;
 
   bool dir1 = vel1 > 0;
   bool dir2 = vel2 < 0;
   
-  sendVels(1,abs(vel1),dir1, 2,(int) abs(vel2),dir2);
+  sendVels(MOTOR1,abs(vel1),dir1, MOTOR2,(int) abs(vel2),dir2);
 }
 
 char Pilot::chksum(unsigned char* data, int length)
@@ -80,11 +89,53 @@ void Pilot::sendVels(int id1, int vel1, int dir1, int id2, int vel2, int dir2){
   int n = serialPort.sendArray(pkt, 14);
 }
 
+void Pilot::publishOdom(){  
+  ros::Time tNow = ros::Time::now();
+
+  // Get the last odom published
+  tf::StampedTransform transform;
+  try {
+    tfli.waitForTransform("/map", "/odom", lastcheck, ros::Duration(10.0) );
+    tfli.lookupTransform("/map", "/odom", lastcheck, transform);
+  } catch (tf::TransformException ex) {
+    ROS_ERROR("%s",ex.what());
+  }
+
+   // Get the inteval duration  
+  ros::Time tTime = transform.stamp_;
+  double interval = (tNow - tTime).toSec();
+  // Get the relative change
+  // TODO: mutuoexclusion of variable vel
+  tf::Transform change;
+  tf::Vector3 o;
+  o.setX(vel->linear.x * interval) ;
+  change.setOrigin(o);
+  // Added 2 factor to the angle - maybe bug when building the quaternion
+  tf::Quaternion rot(tf::Vector3(0,0,1), 2 * vel->angular.z * interval);
+  change.setRotation(rot);
+  // Modify the transform
+  transform.mult(transform, change);
+  
+  //Republish the transform
+  lastcheck = tNow;
+  tfbr.sendTransform(tf::StampedTransform(transform, tNow, "/map", "/odom"));
+}
+
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "pilot");
 
   Pilot pilot; 
+  
+  ros::Rate r(30);
+  while (ros::ok())
+  {
+    ros::spinOnce();
+
+    pilot.publishOdom();
+
+    r.sleep();
+  }  
 
   return 0;
 }
