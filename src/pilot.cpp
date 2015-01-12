@@ -24,7 +24,7 @@ Pilot::Pilot(){
   // Send an initial transform with odometry 0
   tf::Transform transform(tf::Quaternion(tf::Vector3(0,0,1), 0));
   lastcheck = ros::Time::now();
-  tfbr.sendTransform(tf::StampedTransform(transform, lastcheck, "/map", "/odom"));
+  tfbr.sendTransform(tf::StampedTransform(transform, lastcheck, "map", "odom"));
 }
 
 Pilot::~Pilot(){
@@ -95,8 +95,8 @@ void Pilot::publishOdom(){
   // Get the last odom published
   tf::StampedTransform transform;
   try {
-    tfli.waitForTransform("/map", "/odom", lastcheck, ros::Duration(10.0) );
-    tfli.lookupTransform("/map", "/odom", lastcheck, transform);
+    tfli.waitForTransform("map", "odom", lastcheck, ros::Duration(10.0) );
+    tfli.lookupTransform("map", "odom", lastcheck, transform);
   } catch (tf::TransformException ex) {
     ROS_ERROR("%s",ex.what());
   }
@@ -118,7 +118,7 @@ void Pilot::publishOdom(){
   
   //Republish the transform
   lastcheck = tNow;
-  tfbr.sendTransform(tf::StampedTransform(transform, tNow, "/map", "/odom"));
+  tfbr.sendTransform(tf::StampedTransform(transform, tNow, "map", "odom"));
 }
 
 int main(int argc, char **argv)
