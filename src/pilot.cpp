@@ -127,7 +127,7 @@ int main(int argc, char **argv)
 
   Pilot pilot; 
   
-  ros::Rate r(30);
+  ros::Rate r(10);
   while (ros::ok())
   {
     ros::spinOnce();

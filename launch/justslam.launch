@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="robot_pose_fslam" type="robot_pose_fslam" name="slam">
+    <param name="robotFrame" value="robot"/>
+  </node>
+</launch>

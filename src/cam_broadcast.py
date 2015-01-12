@@ -10,6 +10,7 @@ if __name__ == '__main__':
     br = tf.TransformBroadcaster()
 
     r = rospy.Rate(10)
+    print tf.transformations.quaternion_from_euler(-1.57, 0, -1.57)
     while not rospy.is_shutdown():
     	br.sendTransform((.063,0,.15),
                      tf.transformations.quaternion_from_euler(-1.57, 0, -1.57),
