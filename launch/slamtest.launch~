@@ -1,6 +1,6 @@
 <launch>
   <node pkg="romina2" type="pilot" name="pilot">
-    <remap to="/cmd_vel_mux/input/teleop" from="/cmd_vel"/>
+    <remap from="/cmd_vel_mux/input/teleop" to="/cmd_vel"/>
   </node>
   <node pkg="romina2" type="cam_broadcast.py" name="cam_frame"/>
   
