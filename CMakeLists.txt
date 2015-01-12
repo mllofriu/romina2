@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   tf
+  robot_pose_fslam
 )
 
 ## System dependencies are found with CMake's conventions
