@@ -2,5 +2,7 @@
   <node pkg="romina2" type="pilot" name="pilot"/>
   <node pkg="romina2" type="cam_broadcast.py" name="cam_frame"/>
   
-  <node pkg="robot_pose_fslam" type="robot_pose_fslam" name="slam"/>
+  <node pkg="robot_pose_fslam" type="robot_pose_fslam" name="slam">
+    <param name="robotFrame" value="robot"/>
+  </node>
 </launch>
