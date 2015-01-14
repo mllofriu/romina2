@@ -1,8 +1,7 @@
 <launch>
-  <node pkg="romina2" type="pilot" name="pilot">
+   <node pkg="romina2" type="pilot" name="pilot" respawn="true">
     <remap to="/cmd_vel_mux/input/teleop" from="/cmd_vel"/>
   </node>
-  <node pkg="tf" type="static_transform_publisher" name="cam_broadcaster" args=".063 0 0.15 -1.57 0 -1.57 robot usb_cam 100" />
  
   <node pkg="nodelet" type="nodelet" name="manager" args="manager" output="screen"/>
 	<node pkg="nodelet" type="nodelet" name="cam" args="load usb_cam/usb_cam_nodelet manager">
