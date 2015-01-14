@@ -18,13 +18,15 @@ Pilot::Pilot(){
 
   vel = geometry_msgs::Twist::ConstPtr(new geometry_msgs::Twist());
 
-  //http://answers.ros.org/question/108551/using-subscribercallback-function-inside-of-a-class-c/
-  sub = n.subscribe("/cmd_vel", 1, &Pilot::velCallback, this);
-
   // Send an initial transform with odometry 0
-  tf::Transform transform(tf::Quaternion(tf::Vector3(0,0,1), 0));
+  odomT = tf::Transform (tf::Quaternion(tf::Vector3(0,0,1), 0));
   lastcheck = ros::Time::now();
-  tfbr.sendTransform(tf::StampedTransform(transform, lastcheck, "map", "odom"));
+  tfbr.sendTransform(tf::StampedTransform(odomT, lastcheck, "map", "odom"));
+
+  //http://answers.ros.org/question/108551/using-subscribercallback-function-inside-of-a-class-c/
+  sub = n.subscribe("/cmd_vel", 10, &Pilot::velCallback, this);
+
+  
 }
 
 Pilot::~Pilot(){
@@ -92,33 +94,22 @@ void Pilot::sendVels(int id1, int vel1, int dir1, int id2, int vel2, int dir2){
 void Pilot::publishOdom(){  
   ros::Time tNow = ros::Time::now();
 
-  // Get the last odom published
-  tf::StampedTransform transform;
-  try {
-    tfli.waitForTransform("map", "odom", lastcheck, ros::Duration(10.0) );
-    tfli.lookupTransform("map", "odom", lastcheck, transform);
-  } catch (tf::TransformException ex) {
-    ROS_ERROR("%s",ex.what());
-  }
-
-   // Get the inteval duration  
-  ros::Time tTime = transform.stamp_;
-  double interval = (tNow - tTime).toSec();
+  double interval = (tNow - lastcheck).toSec();
   // Get the relative change
   // TODO: mutuoexclusion of variable vel
   tf::Transform change;
   tf::Vector3 o;
-  o.setX(vel->linear.x * interval) ;
+  o.setX(vel->linear.x * interval);
   change.setOrigin(o);
   // Added 2 factor to the angle - maybe bug when building the quaternion
   tf::Quaternion rot(tf::Vector3(0,0,1), 2 * vel->angular.z * interval);
   change.setRotation(rot);
   // Modify the transform
-  transform.mult(transform, change);
+  odomT.mult(odomT, change);
   
   //Republish the transform
   lastcheck = tNow;
-  tfbr.sendTransform(tf::StampedTransform(transform, tNow, "map", "odom"));
+  tfbr.sendTransform(tf::StampedTransform(odomT, tNow, "map", "odom"));
 }
 
 int main(int argc, char **argv)
@@ -127,7 +118,7 @@ int main(int argc, char **argv)
 
   Pilot pilot; 
   
-  ros::Rate r(10);
+  ros::Rate r(5);
   while (ros::ok())
   {
     ros::spinOnce();

@@ -22,6 +22,6 @@ private:
   geometry_msgs::Twist::ConstPtr vel;
   ros::Time lastcheck;
   tf::TransformBroadcaster tfbr;
-  tf::TransformListener tfli;
+  tf::Transform odomT;
   ros::Subscriber sub;
 };
