@@ -1,0 +1,7 @@
+<library path="lib/libwall_detector_nodelet">
+  <class name="WallDetectorNodelet" type="WallDetectorNodelet" base_class_type="nodelet::Nodelet">
+    <description>
+      wall_detector nodelet
+    </description>
+  </class>
+</library>

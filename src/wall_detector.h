@@ -19,7 +19,7 @@ using namespace boost;
 
 class WallDetector {
 public:
-	WallDetector();
+	WallDetector(NodeHandle n);
 	virtual ~WallDetector();
 
 private:

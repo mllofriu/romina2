@@ -21,7 +21,9 @@ using namespace cv_bridge;
 using namespace sensor_msgs;
 using namespace cv;
 
-WallDetector::WallDetector() {
+WallDetector::WallDetector(NodeHandle n) {
+	this->n = n;
+
 	markerPub = n.advertise<Marker>("lines", 1, false);
 
 	infoSub = n.subscribe("camera_info", 2, &WallDetector::camInfoCallback,
@@ -116,7 +118,7 @@ void WallDetector::camInfoCallback(
 
 int main(int argc, char ** argv) {
 	init(argc, argv, "wall_detector");
-	WallDetector w = WallDetector();
+	WallDetector w = WallDetector(NodeHandle());
 	spin();
 }
 
