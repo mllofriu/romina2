@@ -2,7 +2,7 @@
 <robot name="robot">
 
   <link name="robot">
-	</link>
+  </link>
    
   <joint name="robot_to_base" type="fixed">
 		<parent link="robot"/>

@@ -1,0 +1,4 @@
+<launch>
+	<param name="robot_description" textfile="$(find romina2)/urdf/robot.urdf" />
+  <node pkg="rviz" type="rviz" name="rviz" output="screen"/>
+</launch>
