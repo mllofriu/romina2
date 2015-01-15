@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   tf
   robot_pose_fslam
+  cv_bridge
 )
 
 ## System dependencies are found with CMake's conventions
@@ -107,6 +108,9 @@ include_directories(
 ## Declare a cpp executable
 add_executable(pilot src/pilot.cpp src/serialport.cpp)
 add_executable(configmotors src/configmotors.cpp src/serialport.cpp)
+add_executable(wall_detector src/wall_detector.cpp src/coord_transformer.cpp)
+
+
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(romina2_node romina2_generate_messages_cpp)
@@ -118,7 +122,9 @@ target_link_libraries(pilot
 target_link_libraries(configmotors
    ${catkin_LIBRARIES}
 )
-
+target_link_libraries(wall_detector
+   ${catkin_LIBRARIES}
+)
 #############
 ## Install ##
 #############
