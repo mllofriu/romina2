@@ -14,11 +14,4 @@
 	    <param name="pixel_format" value="yuyv" />
 	    <param name="io_method" value="mmap" />
   	</node>
-	<node pkg="nodelet" type="nodelet" name="ar_pose" args="load ar_pose/ARMultiNodelet manager">
-		<param name="marker_pattern_list" type="string" value="$(find romina2)/patterns/column_markers"/>
-		<param name="threshold" type="int" value="125"/>
-		<param name="publish_tf" type="bool" value="true"/> 
-		<remap to="/cam/camera_info" from="/usb_cam/camera_info" />
-		<remap to="/cam/image_raw" from="/usb_cam/image_raw" />
-	</node>
 </launch>
