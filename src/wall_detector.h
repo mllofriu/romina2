@@ -28,7 +28,9 @@ private:
 	shared_ptr<CoordTransformer> coordTransformer;
 	Subscriber imgSub;
 	Subscriber infoSub;
+	Publisher markerPub;
 	NodeHandle n;
+	int markerId = 0;
 };
 
 #endif /* WALLDETECTOR_H_ */

@@ -10,21 +10,25 @@
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
 #include <geometry_msgs/PolygonStamped.h>
+#include <geometry_msgs/Point32.h>
+#include <geometry_msgs/Point.h>
+#include <visualization_msgs/Marker.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+using namespace visualization_msgs;
 using namespace cv_bridge;
 using namespace sensor_msgs;
 using namespace cv;
 
 WallDetector::WallDetector() {
+	markerPub = n.advertise<Marker>("lines", 1, false);
+
 	infoSub = n.subscribe("camera_info", 2, &WallDetector::camInfoCallback,
 			this);
 }
 
 WallDetector::~WallDetector() {
-	delete infoSub;
-	delete imgSub;
 }
 
 void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
@@ -53,8 +57,8 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 //    Mat img(cv_ptr->image);
 //    for( size_t i = 0; i < lines.size(); i++ )
 //	{
-//		line( img, Point(lines[i][0], lines[i][1]),
-//			Point(lines[i][2], lines[i][3]), Scalar(0,0,255), 3, 8 );
+//		line( img, cv::Point(lines[i][0], lines[i][1]),
+//			cv::Point(lines[i][2], lines[i][3]), Scalar(0,0,255), 3, 8 );
 //	}
 //
 //	imshow("Lines", img);
@@ -64,6 +68,36 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 
 	vector<PolygonStamped> linesTransformed;
 	coordTransformer->transformLines(lines, image_message->header.stamp, linesTransformed);
+
+	// Publish visual lines
+	Marker m;
+	m.header.frame_id = "robot";
+	m.header.stamp = image_message->header.stamp;
+	m.ns = "";
+	m.id = markerId++;
+	m.type = Marker::LINE_STRIP;
+	m.action = Marker::ADD;;
+	m.pose.orientation.w = 1.0;
+	m.scale.x = .05;
+	m.scale.y = .05;
+	m.scale.z = .05;
+	m.color.r = 1.0;
+	m.color.g = 1.0;
+	m.color.b = 1.0;
+	m.color.a = 1.0;
+	m.lifetime = Duration(1.0);
+	for (int i = 0; i < linesTransformed.size(); i++){
+		vector<geometry_msgs::Point32> ps = linesTransformed.at(i).polygon.points;
+		for (int j = 0; j < ps.size(); j++){
+			Point32 p32 = ps.at(j);
+			geometry_msgs::Point p64;
+			p64.x = p32.x;
+			p64.y = p32.y;
+			p64.z = p32.z;
+			m.points.push_back(p64);
+		}
+	}
+	markerPub.publish(m);
 
 	waitKey(3);
 }

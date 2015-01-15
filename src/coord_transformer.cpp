@@ -21,7 +21,8 @@ CoordTransformer::CoordTransformer(float fx, float fy, float imgH, float imgW,
 	this->tfl = tfl;
 }
 
-void CoordTransformer::transformLines(vector<Vec4i> & lines, ros::Time stamp, vector<PolygonStamped> & transformedLines) {
+void CoordTransformer::transformLines(vector<Vec4i> & lines, ros::Time stamp,
+		vector<PolygonStamped> & transformedLines) {
 	// Take each endpoint in the detected lines and
 	// Find a point in the line of proyection to the object (3d) intersecting with the lens plane
 	vector<Point32> points;
@@ -41,40 +42,46 @@ void CoordTransformer::transformLines(vector<Vec4i> & lines, ros::Time stamp, ve
 	}
 
 	// Build point cloud with ends of each line of proyection
-	PointCloud pclIn;
-	pclIn.points = points;
-	pclIn.header.stamp = stamp;
-	pclIn.header.frame_id = srcFrame;
+	try {
+		PointCloud pclIn;
+		pclIn.points = points;
+		pclIn.header.stamp = stamp;
+		pclIn.header.frame_id = srcFrame;
 
-	// Transform the pointcloud to dstFrame
-	PointCloud pclOut;
-	tfl->waitForTransform(dstFrame, srcFrame, stamp, Duration(1));
-	tfl->transformPointCloud(dstFrame, pclIn, pclOut);
+		// Transform the pointcloud to dstFrame
+		PointCloud pclOut;
+		tfl->waitForTransform(dstFrame, srcFrame, stamp, Duration(1));
+		tfl->transformPointCloud(dstFrame, pclIn, pclOut);
 
-	// Find the transform between src and dst frames
-	tf::StampedTransform t;
-	tfl->lookupTransform(dstFrame, srcFrame, stamp, t);
+		// Find the transform between src and dst frames
+		tf::StampedTransform t;
+		tfl->lookupTransform(dstFrame, srcFrame, stamp, t);
 
-	// Proyect each line and intersect with the floor
-	// Build a polygon with each proyected line
-	vector<PolygonStamped> polygons;
-	for(int i = 0; i < pclOut.points.size(); i += 2){
-		PolygonStamped pol;
-		pol.header.stamp = stamp;
-		pol.header.frame_id = dstFrame;
-		pol.polygon.points.push_back(intersectLine(pclOut.points.at(i), t));
-		pol.polygon.points.push_back(intersectLine(pclOut.points.at(i + 1), t));
+		// Proyect each line and intersect with the floor
+		// Build a polygon with each proyected line
+		vector<PolygonStamped> polygons;
+		for (int i = 0; i < pclOut.points.size(); i += 2) {
+			PolygonStamped pol;
+			pol.header.stamp = stamp;
+			pol.header.frame_id = dstFrame;
+			pol.polygon.points.push_back(intersectLine(pclOut.points.at(i), t));
+			pol.polygon.points.push_back(
+					intersectLine(pclOut.points.at(i + 1), t));
 
-		transformedLines.push_back(pol);
+			transformedLines.push_back(pol);
+		}
+	} catch (tf::TransformException ex) {
+		ROS_ERROR("%s", ex.what());
+		ros::Duration(1.0).sleep();
 	}
 }
 
 /***
  * Intersects the line formed by [t.getORigin, p] with the plane z=0
  */
-Point32 CoordTransformer::intersectLine(Point32 & p, tf::Transform & t){
+Point32 CoordTransformer::intersectLine(Point32 & p, tf::Transform & t) {
 	Point32 pT;
-	float paramLambda = t.getOrigin().getZ() / (t.getOrigin().getZ()-p.z);
+	float paramLambda = t.getOrigin().getZ() / (t.getOrigin().getZ() - p.z);
 	pT.x = t.getOrigin().getX() + paramLambda * (p.x - t.getOrigin().getX());
 	pT.y = t.getOrigin().getY() + paramLambda * (p.y - t.getOrigin().getY());
 	pT.z = 0;
