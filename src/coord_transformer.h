@@ -21,16 +21,16 @@ using namespace ros;
 using namespace geometry_msgs;
 using namespace sensor_msgs;
 
-
 class CoordTransformer {
 public:
 	CoordTransformer(float fx, float fy, float imgH, float imgW,
 			string srcFrame, string dstFrame, TransformListener * tfl);
-	void transformLines(vector<Vec4i> & lines, ros::Time stamp, vector<PolygonStamped> & transformedLines);
+	void transformLines(vector<Vec4i> & lines, ros::Time stamp,
+			vector<PolygonStamped> & transformedLines);
 	virtual ~CoordTransformer();
 
 private:
-	Point32 intersectLine(Point32 & p, tf::Transform & t);
+	Point32 intersectLine(Point32 & p, tf::Transform & t, float knownZ);
 
 	float fx, fy, imgH, imgW;
 	string srcFrame, dstFrame;

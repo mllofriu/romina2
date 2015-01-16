@@ -36,7 +36,7 @@ WallDetector::~WallDetector() {
 }
 
 void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
-	//ROS_INFO("Image received");
+	ROS_INFO("Image received");
 	CvImageConstPtr cv_ptr;
 	try {
 		cv_ptr = toCvShare(image_message, image_encodings::BGR8);
@@ -50,7 +50,7 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 	Mat y = channels[0];
 
 	Mat thrs(y.size(), y.type());
-	threshold(y, thrs, 100, 255, THRESH_BINARY);
+	threshold(y, thrs, 200, 255, THRESH_BINARY);
 
 	Mat cann(thrs.size(), thrs.type());
 	Canny(thrs, cann, 0, 200);
@@ -58,17 +58,17 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 	vector<Vec4i> lines;
 	HoughLinesP(cann, lines, 1, CV_PI / 180, 75, 50, 30);
 
-//    Mat img(cv_ptr->image);
-//    for( size_t i = 0; i < lines.size(); i++ )
-//	{
-//		line( img, cv::Point(lines[i][0], lines[i][1]),
-//			cv::Point(lines[i][2], lines[i][3]), Scalar(0,0,255), 3, 8 );
-//	}
-//
-//	imshow("Lines", img);
-//	imshow("Canny", cann);
-//	imshow("Thrs", thrs);
-//	imshow("Luma", y);
+    Mat img(cv_ptr->image);
+    for( size_t i = 0; i < lines.size(); i++ )
+	{
+		line( img, cv::Point(lines[i][0], lines[i][1]),
+			cv::Point(lines[i][2], lines[i][3]), Scalar(0,0,255), 3, 8 );
+	}
+
+	imshow("Lines", img);
+	imshow("Canny", cann);
+	imshow("Thrs", thrs);
+	imshow("Luma", y);
 
 	vector<PolygonStamped> linesTransformed;
 	coordTransformer->transformLines(lines, image_message->header.stamp, linesTransformed);
@@ -103,7 +103,7 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 	}
 	markerPub.publish(m);
 
-	//waitKey(3);
+	waitKey(3);
 }
 
 void WallDetector::camInfoCallback(

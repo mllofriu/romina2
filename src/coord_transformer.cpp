@@ -64,9 +64,9 @@ void CoordTransformer::transformLines(vector<Vec4i> & lines, ros::Time stamp,
 			PolygonStamped pol;
 			pol.header.stamp = stamp;
 			pol.header.frame_id = dstFrame;
-			pol.polygon.points.push_back(intersectLine(pclOut.points.at(i), t));
+			pol.polygon.points.push_back(intersectLine(pclOut.points.at(i), t, 0.05f));
 			pol.polygon.points.push_back(
-					intersectLine(pclOut.points.at(i + 1), t));
+					intersectLine(pclOut.points.at(i + 1), t, 0.05f));
 
 			transformedLines.push_back(pol);
 		}
@@ -79,9 +79,9 @@ void CoordTransformer::transformLines(vector<Vec4i> & lines, ros::Time stamp,
 /***
  * Intersects the line formed by [t.getORigin, p] with the plane z=0
  */
-Point32 CoordTransformer::intersectLine(Point32 & p, tf::Transform & t) {
+Point32 CoordTransformer::intersectLine(Point32 & p, tf::Transform & t, float knownZ) {
 	Point32 pT;
-	float paramLambda = t.getOrigin().getZ() / (t.getOrigin().getZ() - p.z);
+	float paramLambda = (knownZ - t.getOrigin().getZ()) / (t.getOrigin().getZ() - p.z);
 	pT.x = t.getOrigin().getX() + paramLambda * (p.x - t.getOrigin().getX());
 	pT.y = t.getOrigin().getY() + paramLambda * (p.y - t.getOrigin().getY());
 	pT.z = 0;
