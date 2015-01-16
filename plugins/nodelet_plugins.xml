@@ -1,5 +1,5 @@
 <library path="lib/libwall_detector_nodelet">
-  <class name="WallDetectorNodelet" type="WallDetectorNodelet" base_class_type="nodelet::Nodelet">
+  <class name="romina2/WallDetectorNodelet" type="WallDetectorNodelet" base_class_type="nodelet::Nodelet">
     <description>
       wall_detector nodelet
     </description>

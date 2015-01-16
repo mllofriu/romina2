@@ -26,6 +26,8 @@ WallDetector::WallDetector(NodeHandle n) {
 
 	markerPub = n.advertise<Marker>("lines", 1, false);
 
+	markerId = 0;
+
 	infoSub = n.subscribe("camera_info", 2, &WallDetector::camInfoCallback,
 			this);
 }
@@ -34,7 +36,7 @@ WallDetector::~WallDetector() {
 }
 
 void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
-	ROS_INFO("Image received");
+	//ROS_INFO("Image received");
 	CvImageConstPtr cv_ptr;
 	try {
 		cv_ptr = toCvShare(image_message, image_encodings::BGR8);
@@ -101,7 +103,7 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 	}
 	markerPub.publish(m);
 
-	waitKey(3);
+	//waitKey(3);
 }
 
 void WallDetector::camInfoCallback(
@@ -110,7 +112,7 @@ void WallDetector::camInfoCallback(
 	infoSub.shutdown();
 	TransformListener * tfl = new TransformListener();
 	// Initialize coordinate transformer. info->P[0] and P[5] contain fx and fy
-	coordTransformer = shared_ptr<CoordTransformer>(
+	coordTransformer = boost::shared_ptr<CoordTransformer>(
 			new CoordTransformer(info->P[0], info->P[5], info->height,
 					info->width, "usb_cam", "robot", tfl));
 	imgSub = n.subscribe("image", 2, &WallDetector::imageCallback, this);

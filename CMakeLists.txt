@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   robot_pose_fslam
   cv_bridge
+  nodelet
 )
 
 ## System dependencies are found with CMake's conventions

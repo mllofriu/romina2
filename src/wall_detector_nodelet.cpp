@@ -11,8 +11,8 @@
 
 class WallDetectorNodelet : public nodelet::Nodelet {
 public:
-	WallDetectorNodelet();
-	virtual ~WallDetectorNodelet();
+	WallDetectorNodelet() {};
+	virtual ~WallDetectorNodelet(){};
 
 	virtual void onInit()
 	  {

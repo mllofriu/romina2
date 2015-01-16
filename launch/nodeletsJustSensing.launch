@@ -21,4 +21,9 @@
 		<remap to="/cam/camera_info" from="/usb_cam/camera_info" />
 		<remap to="/cam/image_raw" from="/usb_cam/image_raw" />
 	</node>
+
+  <node pkg="nodelet" type="nodelet" name="wall_detector" args="load romina2/WallDetectorNodelet manager" output="screen">
+    <remap to="/cam/camera_info" from="~camera_info" />
+    <remap to="/cam/image_raw" from="~image" />
+  </node>
 </launch>

@@ -25,12 +25,12 @@ public:
 private:
 	void imageCallback(const sensor_msgs::Image::ConstPtr&);
 	void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr);
-	shared_ptr<CoordTransformer> coordTransformer;
+	boost::shared_ptr<CoordTransformer> coordTransformer;
 	Subscriber imgSub;
 	Subscriber infoSub;
 	Publisher markerPub;
 	NodeHandle n;
-	int markerId = 0;
+	int markerId;
 };
 
 #endif /* WALLDETECTOR_H_ */
