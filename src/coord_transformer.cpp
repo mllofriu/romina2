@@ -64,11 +64,18 @@ void CoordTransformer::transformLines(vector<Vec4i> & lines, ros::Time stamp,
 			PolygonStamped pol;
 			pol.header.stamp = stamp;
 			pol.header.frame_id = dstFrame;
-			pol.polygon.points.push_back(intersectLine(pclOut.points.at(i), t, 0.05f));
-			pol.polygon.points.push_back(
-					intersectLine(pclOut.points.at(i + 1), t, 0.05f));
+      Point32 p1 = intersectLine(pclOut.points.at(i), t, 0.05f);
+      Point32 p2 = intersectLine(pclOut.points.at(i+1), t, 0.05f);
+      
+      // Check that the detected points are valid
+      // Camera could never detect something behind the robot
+      // but the assumption of z == 0.05 could produce this
+      if (p1.x > 0 && p2.x > 0){
+			  pol.polygon.points.push_back(p1);
+			  pol.polygon.points.push_back(p2);
 
-			transformedLines.push_back(pol);
+			  transformedLines.push_back(pol);
+      }
 		}
 	} catch (tf::TransformException ex) {
 		ROS_ERROR("%s", ex.what());
@@ -81,7 +88,7 @@ void CoordTransformer::transformLines(vector<Vec4i> & lines, ros::Time stamp,
  */
 Point32 CoordTransformer::intersectLine(Point32 & p, tf::Transform & t, float knownZ) {
 	Point32 pT;
-	float paramLambda = (knownZ - t.getOrigin().getZ()) / (t.getOrigin().getZ() - p.z);
+	float paramLambda = (knownZ - t.getOrigin().getZ()) / (p.z - t.getOrigin().getZ());
 	pT.x = t.getOrigin().getX() + paramLambda * (p.x - t.getOrigin().getX());
 	pT.y = t.getOrigin().getY() + paramLambda * (p.y - t.getOrigin().getY());
 	pT.z = 0;
