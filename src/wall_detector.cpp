@@ -25,18 +25,24 @@ WallDetector::WallDetector(NodeHandle n) {
 	this->n = n;
 
 	markerPub = n.advertise<Marker>("lines", 1, false);
-
+  thrsImgPub = n.advertise<Image>("/thrs_imag", 1, false);  
+  
 	markerId = 0;
 
 	infoSub = n.subscribe("camera_info", 2, &WallDetector::camInfoCallback,
 			this);
+
+  n.param("imgThrs", imgThrs, 150);
+  n.param("lineVoteThrs", lineVoteThrs, 75);
+  n.param("lineMinLen", lineMinLen, 25);
+  n.param("lineMaxGap", lineMaxGap, 30);
 }
 
 WallDetector::~WallDetector() {
 }
 
 void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
-	ROS_INFO("Image received");
+	ROS_DEBUG("Image received");
 	CvImageConstPtr cv_ptr;
 	try {
 		cv_ptr = toCvShare(image_message, image_encodings::BGR8);
@@ -45,30 +51,45 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 		return;
 	}
 
+  // Choose bottom half
+//  Mat roi = cv_ptr->image( Rect(0,cv_ptr->image.cols / 2,cv_ptr->image.rows, cv_ptr->image.cols/2) );
+
+  // Get Y channel
 	Mat channels[3];
 	split(cv_ptr->image, &channels[0]);
 	Mat y = channels[0];
+  
+  // Equalize Histogram
+//  Mat yEq(y.size(), y.type());
+//  equalizeHist( y, yEq );
 
+  // Threshold
 	Mat thrs(y.size(), y.type());
-	threshold(y, thrs, 200, 255, THRESH_BINARY);
+	threshold(y, thrs, imgThrs, 255, THRESH_BINARY);
+  //inRange(cv_ptr->image,Scalar(255 - imgThrs, 128 - imgThrs, 128 - imgThrs), Scalar(255, 128 + imgThrs, 128 + imgThrs), bin);
 
-	Mat cann(thrs.size(), thrs.type());
-	Canny(thrs, cann, 0, 200);
+  cv_bridge::CvImagePtr thrsImg(new cv_bridge::CvImage);
+  thrsImg->encoding = "mono8";
+  thrsImg->image = thrs;
+  thrsImgPub.publish(thrsImg->toImageMsg());
+
+	//Mat cann(thrs.size(), thrs.type());
+	//Canny(thrs, cann, 0, 200);
 
 	vector<Vec4i> lines;
-	HoughLinesP(cann, lines, 1, CV_PI / 180, 75, 50, 30);
+	HoughLinesP(thrs, lines, 1, CV_PI / 180, lineVoteThrs, lineMinLen, lineMaxGap);
 
-    Mat img(cv_ptr->image);
-    for( size_t i = 0; i < lines.size(); i++ )
-	{
-		line( img, cv::Point(lines[i][0], lines[i][1]),
-			cv::Point(lines[i][2], lines[i][3]), Scalar(0,0,255), 3, 8 );
-	}
+//    Mat img(cv_ptr->image);
+//    for( size_t i = 0; i < lines.size(); i++ )
+//	{
+//		line( img, cv::Point(lines[i][0], lines[i][1]),
+//			cv::Point(lines[i][2], lines[i][3]), Scalar(0,0,255), 3, 8 );
+//	}
 
-	imshow("Lines", img);
-	imshow("Canny", cann);
-	imshow("Thrs", thrs);
-	imshow("Luma", y);
+//	imshow("Lines", img);
+//	imshow("Canny", cann);
+//	imshow("Thrs", thrs);
+//	imshow("Luma", y);
 
 	vector<PolygonStamped> linesTransformed;
 	coordTransformer->transformLines(lines, image_message->header.stamp, linesTransformed);
@@ -79,8 +100,8 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 	m.header.stamp = image_message->header.stamp;
 	m.ns = "";
 	m.id = markerId++;
-	m.type = Marker::LINE_STRIP;
-	m.action = Marker::ADD;;
+	m.type = Marker::LINE_LIST;
+	m.action = Marker::ADD;
 	m.pose.orientation.w = 1.0;
 	m.scale.x = .05;
 	m.scale.y = .05;
@@ -103,7 +124,7 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 	}
 	markerPub.publish(m);
 
-	waitKey(3);
+	//waitKey(3);
 }
 
 void WallDetector::camInfoCallback(
