@@ -68,16 +68,23 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 	threshold(y, thrs, imgThrs, 255, THRESH_BINARY);
   //inRange(cv_ptr->image,Scalar(255 - imgThrs, 128 - imgThrs, 128 - imgThrs), Scalar(255, 128 + imgThrs, 128 + imgThrs), bin);
 
+  Mat dilated(thrs.size(), thrs.type());
+  dilate(thrs, dilated, Mat());
+  /// Apply the erosion operation
+  Mat eroded(dilated.size(), dilated.type());
+  erode(dilated, eroded, Mat(), cv::Point(-1,-1), 3);
+
+
   cv_bridge::CvImagePtr thrsImg(new cv_bridge::CvImage);
   thrsImg->encoding = "mono8";
-  thrsImg->image = thrs;
+  thrsImg->image = eroded;
   thrsImgPub.publish(thrsImg->toImageMsg());
 
 	//Mat cann(thrs.size(), thrs.type());
 	//Canny(thrs, cann, 0, 200);
 
 	vector<Vec4i> lines;
-	HoughLinesP(thrs, lines, 1, CV_PI / 180, lineVoteThrs, lineMinLen, lineMaxGap);
+	HoughLinesP(eroded, lines, 1, CV_PI / 180, lineVoteThrs, lineMinLen, lineMaxGap);
 
 //    Mat img(cv_ptr->image);
 //    for( size_t i = 0; i < lines.size(); i++ )
