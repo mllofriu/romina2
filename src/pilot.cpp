@@ -3,6 +3,7 @@
 
 #include <boost/thread.hpp>
 
+
 #define MOTOR1 16
 #define MOTOR2 18
 
@@ -14,7 +15,8 @@ Pilot::Pilot(ros::NodeHandle & n){
     ROS_INFO ("Can't open serial port");
   }
 
-  vel = geometry_msgs::Twist::ConstPtr(new geometry_msgs::Twist());
+  sem_init(&mtx, 0, 1);
+  vel = geometry_msgs::Twist();
 
   // Send an initial transform with odometry 0
   odomT = tf::Transform (tf::Quaternion(tf::Vector3(0,0,1), 0));
@@ -24,7 +26,7 @@ Pilot::Pilot(ros::NodeHandle & n){
   //http://answers.ros.org/question/108551/using-subscribercallback-function-inside-of-a-class-c/
   sub = n.subscribe("/cmd_vel", 10, &Pilot::velCallback, this);
 
-  boost::thread publisherThread(boost::bind( &Pilot::publishOdom, this ));
+  publisherThread = new boost::thread(boost::bind( &Pilot::publishOdom, this ));
   
 }
 
@@ -39,12 +41,14 @@ void Pilot::velCallback(const geometry_msgs::Twist::ConstPtr& velmsg)
 {
   ROS_DEBUG("Received vel");
 
-  vel = velmsg;
+  sem_wait(&mtx);
+  vel = *velmsg;
+  sem_post(&mtx);  
 
   // 1m, 512 -> 7.7s => 512 -> 1/7.7 m/s => tics = 512 / .12987 
-  int forwardvel = -round(velmsg->linear.x * TO_METERS_PER_SEC_FWD);
+  int forwardvel = -round(vel.linear.x * TO_METERS_PER_SEC_FWD);
 
-  int rotvel = velmsg->angular.z * TO_RADS_PER_SEC_ROT;
+  int rotvel = vel.angular.z * TO_RADS_PER_SEC_ROT;
 
   int vel1 = forwardvel + rotvel;
   int vel2 = (forwardvel - rotvel) * STRAIGHT_CORRECTION;
@@ -95,8 +99,7 @@ void Pilot::publishOdom(){
   ros::Rate r(5);
   while (ros::ok())
   {
-    ros::spinOnce();
-
+    //ros::spinOnce();
     ros::Time tNow = ros::Time::now();
 
     double interval = (tNow - lastcheck).toSec();
@@ -104,10 +107,14 @@ void Pilot::publishOdom(){
     // TODO: mutuoexclusion of variable vel
     tf::Transform change;
     tf::Vector3 o;
-    o.setX(vel->linear.x * interval);
-    change.setOrigin(o);
+
+    sem_wait(&mtx);
+    o.setX(vel.linear.x * interval);
     // Added 2 factor to the angle - maybe bug when building the quaternion
-    tf::Quaternion rot(tf::Vector3(0,0,1), 2 * vel->angular.z * interval);
+    tf::Quaternion rot(tf::Vector3(0,0,1), 2 * vel.angular.z * interval);
+    sem_post(&mtx);  
+
+    change.setOrigin(o);
     change.setRotation(rot);
     // Modify the transform
     odomT.mult(odomT, change);

@@ -2,6 +2,8 @@
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 #include "ros/ros.h"
+#include <semaphore.h>
+#include <boost/thread.hpp>
 
 #define STRAIGHT_CORRECTION 1 //1.15
 #define TO_METERS_PER_SEC_FWD 3942.39
@@ -20,9 +22,11 @@ private:
 
 
 	SerialPort serialPort;
-  geometry_msgs::Twist::ConstPtr vel;
+  geometry_msgs::Twist vel;
   ros::Time lastcheck;
   tf::TransformBroadcaster tfbr;
   tf::Transform odomT;
   ros::Subscriber sub;
+  sem_t mtx;
+  boost::thread * publisherThread;
 };
