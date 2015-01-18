@@ -77,7 +77,7 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 
   cv_bridge::CvImagePtr thrsImg(new cv_bridge::CvImage);
   thrsImg->encoding = "mono8";
-  thrsImg->image = eroded;
+  thrsImg->image = thrs;
   thrsImgPub.publish(thrsImg->toImageMsg());
 
 	//Mat cann(thrs.size(), thrs.type());
