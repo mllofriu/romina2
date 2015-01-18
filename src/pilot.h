@@ -1,6 +1,7 @@
 #include "geometry_msgs/Twist.h"
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
+#include "ros/ros.h"
 
 #define STRAIGHT_CORRECTION 1 //1.15
 #define TO_METERS_PER_SEC_FWD 3942.39
@@ -8,7 +9,7 @@
 
 class Pilot {
 public:
-	Pilot();
+	Pilot(ros::NodeHandle& n);
 	~Pilot();
 
 	void velCallback(const geometry_msgs::Twist::ConstPtr& vel);

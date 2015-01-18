@@ -4,4 +4,14 @@
       wall_detector nodelet
     </description>
   </class>
+  
 </library>
+
+<library path="lib/libpilot_nodelet">
+  <class name="romina2/PilotNodelet" type="PilotNodelet" base_class_type="nodelet::Nodelet">
+    <description>
+      pilot nodelet
+    </description>
+  </class>
+</library>
+

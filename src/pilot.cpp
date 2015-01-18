@@ -1,20 +1,18 @@
-#include "ros/ros.h"
 #include "serialport.h"
 #include "pilot.h"
 
+#include <boost/thread.hpp>
 
 #define MOTOR1 16
 #define MOTOR2 18
 
-Pilot::Pilot(){
+Pilot::Pilot(ros::NodeHandle & n){
   if (serialPort.connect("/dev/ttyUSB0")!=0) {
-    printf ("Serial port opened\n");
+    ROS_INFO ("Serial port opened\n");
 
   } else {
-    printf ("Can't open serial port");
+    ROS_INFO ("Can't open serial port");
   }
-
-  ros::NodeHandle n;
 
   vel = geometry_msgs::Twist::ConstPtr(new geometry_msgs::Twist());
 
@@ -26,6 +24,7 @@ Pilot::Pilot(){
   //http://answers.ros.org/question/108551/using-subscribercallback-function-inside-of-a-class-c/
   sub = n.subscribe("/cmd_vel", 10, &Pilot::velCallback, this);
 
+  boost::thread publisherThread(boost::bind( &Pilot::publishOdom, this ));
   
 }
 
@@ -38,7 +37,7 @@ Pilot::~Pilot(){
  */
 void Pilot::velCallback(const geometry_msgs::Twist::ConstPtr& velmsg)
 {
-  ROS_INFO("Received vel");
+  ROS_DEBUG("Received vel");
 
   vel = velmsg;
 
@@ -92,31 +91,41 @@ void Pilot::sendVels(int id1, int vel1, int dir1, int id2, int vel2, int dir2){
 }
 
 void Pilot::publishOdom(){  
-  ros::Time tNow = ros::Time::now();
 
-  double interval = (tNow - lastcheck).toSec();
-  // Get the relative change
-  // TODO: mutuoexclusion of variable vel
-  tf::Transform change;
-  tf::Vector3 o;
-  o.setX(vel->linear.x * interval);
-  change.setOrigin(o);
-  // Added 2 factor to the angle - maybe bug when building the quaternion
-  tf::Quaternion rot(tf::Vector3(0,0,1), 2 * vel->angular.z * interval);
-  change.setRotation(rot);
-  // Modify the transform
-  odomT.mult(odomT, change);
+  ros::Rate r(5);
+  while (ros::ok())
+  {
+    ros::spinOnce();
+
+    ros::Time tNow = ros::Time::now();
+
+    double interval = (tNow - lastcheck).toSec();
+    // Get the relative change
+    // TODO: mutuoexclusion of variable vel
+    tf::Transform change;
+    tf::Vector3 o;
+    o.setX(vel->linear.x * interval);
+    change.setOrigin(o);
+    // Added 2 factor to the angle - maybe bug when building the quaternion
+    tf::Quaternion rot(tf::Vector3(0,0,1), 2 * vel->angular.z * interval);
+    change.setRotation(rot);
+    // Modify the transform
+    odomT.mult(odomT, change);
+
+    //Republish the transform
+    lastcheck = tNow;
+    tfbr.sendTransform(tf::StampedTransform(odomT, tNow, "map", "odom"));
+
+    r.sleep();
+  }  
   
-  //Republish the transform
-  lastcheck = tNow;
-  tfbr.sendTransform(tf::StampedTransform(odomT, tNow, "map", "odom"));
 }
 
-int main(int argc, char **argv)
+/*int main(int argc, char **argv)
 {
   ros::init(argc, argv, "pilot");
 
-  Pilot pilot; 
+  Pilot pilot (ros::NodeHandle()); 
   
   ros::Rate r(5);
   while (ros::ok())
@@ -129,4 +138,35 @@ int main(int argc, char **argv)
   }  
 
   return 0;
-}
+}*/
+
+#include <nodelet/nodelet.h>
+#include <pluginlib/class_list_macros.h>
+
+class PilotNodelet : public nodelet::Nodelet {
+public:
+	PilotNodelet() {};
+	virtual ~PilotNodelet(){};
+
+	virtual void onInit()
+	  {
+	    ros::NodeHandle nh = this->getPrivateNodeHandle();
+
+	    // resolve node(let) name
+	    std::string name = nh.getUnresolvedNamespace();
+	    //NODELET_INFO_STREAM("Namespace " << name);
+	    int pos = name.find_last_of('/');
+	    name = name.substr(pos + 1);
+
+	    NODELET_INFO_STREAM("Initialising nodelet... [" << name << "]");
+	    controller_.reset(new Pilot(nh));
+
+	  }
+	private:
+	  boost::shared_ptr<Pilot> controller_;
+};
+
+PLUGINLIB_EXPORT_CLASS(PilotNodelet,
+                       nodelet::Nodelet);
+
+

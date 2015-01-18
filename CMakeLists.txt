@@ -107,7 +107,7 @@ include_directories(
 # )
 
 ## Declare a cpp executable
-add_executable(pilot src/pilot.cpp src/serialport.cpp)
+add_library(pilot_nodelet src/pilot.cpp src/serialport.cpp)
 add_executable(configmotors src/configmotors.cpp src/serialport.cpp)
 add_library(wall_detector_nodelet src/wall_detector.cpp src/coord_transformer.cpp src/wall_detector_nodelet.cpp)
 #add_executable(wall_detector src/wall_detector.cpp src/coord_transformer.cpp)
@@ -118,7 +118,7 @@ add_library(wall_detector_nodelet src/wall_detector.cpp src/coord_transformer.cp
 # add_dependencies(romina2_node romina2_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(pilot
+target_link_libraries(pilot_nodelet
    ${catkin_LIBRARIES}
 )
 target_link_libraries(configmotors
