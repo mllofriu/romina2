@@ -65,7 +65,7 @@
 	  </link>
 
 
-	  <joint name="front_base_to_right_wheel" type="continuous">
+	  <joint name="front_base_to_right_wheel" type="fixed">
 		  <parent link="base"/>
 		  <child link="front_right_wheel"/>
 		  <origin rpy="0 0 1.57" xyz="0 0.06 -0.025"/>
@@ -105,7 +105,7 @@
 	  </link>
 
 
-	  <joint name="front_base_to_left_wheel" type="continuous">
+	  <joint name="front_base_to_left_wheel" type="fixed">
 		  <parent link="base"/>
 		  <child link="front_left_wheel"/>
 		  <origin rpy="0 0 -1.57" xyz="0 -0.06 -0.025"/>
