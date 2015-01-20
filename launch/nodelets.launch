@@ -6,9 +6,7 @@
   <arg name="gui" default="False" />
 	<param name="robot_description" textfile="$(find romina2)/urdf/robot.urdf" />
 	<param name="use_gui" value="$(arg gui)"/>
-	<!-- 
-  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" /> 
-  -->	
+	<!-- <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" /> -->	
 	<node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher">
     <param name="publish_frequency" value="1"/>
   </node>
@@ -16,6 +14,11 @@
   <node pkg="nodelet" type="nodelet" name="manager" args="manager" output="screen">	
     <param name="num_worker_threads" value="1" />
   </node>
+
+  <node pkg="nodelet" type="nodelet" name="pilot" args="load romina2/PilotNodelet manager">
+    <remap to="/cmd_vel_mux/input/teleop" from="/cmd_vel"/>
+    <param name="toRadPerSec" value="850"/>
+  </node> 
 
   <node pkg="nodelet" type="nodelet" name="cam" args="load usb_cam/usb_cam_nodelet manager">
 	    <param name="video_device" value="/dev/video0" />
@@ -27,18 +30,13 @@
 	    <param name="pixel_format" value="yuyv" />
 	    <param name="io_method" value="mmap" />
       <param name="auto_white_balance" value="false"/>
+      <param name="auto_focus" value="true"/>
   	</node>
-
-  <node pkg="nodelet" type="nodelet" name="pilot" args="load romina2/PilotNodelet manager">
-   <remap to="/cmd_vel_mux/input/teleop" from="/cmd_vel"/>
-  </node> 
-
-  
 
 
 	<node pkg="nodelet" type="nodelet" name="ar_pose" args="load ar_pose/ARMultiNodelet manager">
 		<param name="marker_pattern_list" type="string" value="$(find romina2)/patterns/column_markers"/>
-		<param name="threshold" type="int" value="125"/>
+		<param name="threshold" type="int" value="200"/>
 		<param name="publish_tf" type="bool" value="true"/> 
 		<remap to="/cam/camera_info" from="/usb_cam/camera_info" />
 		<remap to="/cam/image_raw" from="/usb_cam/image_raw" />
@@ -46,7 +44,7 @@
 
 
   <node pkg="nodelet" type="nodelet" name="wall_detector" args="load romina2/WallDetectorNodelet manager" output="screen">
-    <param name="imgThrs" value="125"/>
+    <param name="imgThrs" value="200"/>
     <param name="lineVoteThrs" value="50"/>
     <param name="lineMinLen" value="10"/>
     <param name="lineMaxGap" value="30"/>
@@ -57,5 +55,5 @@
   <node pkg="nodelet" type="nodelet" name="robot_pose_fslam" args="load robot_pose_fslam/FSLAMNodelet manager" output="screen">
     <param name="robotFrame" value="robot"/>
   </node>
-
+  
 </launch>
