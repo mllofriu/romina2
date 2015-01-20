@@ -72,12 +72,12 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
   dilate(thrs, dilated, Mat());
   /// Apply the erosion operation
   Mat eroded(dilated.size(), dilated.type());
-  erode(dilated, eroded, Mat(), cv::Point(-1,-1), 3);
+  erode(dilated, eroded, Mat(), cv::Point(-1,-1));
 
 
   cv_bridge::CvImagePtr thrsImg(new cv_bridge::CvImage);
   thrsImg->encoding = "mono8";
-  thrsImg->image = thrs;
+  thrsImg->image = eroded;
   thrsImgPub.publish(thrsImg->toImageMsg());
 
 	//Mat cann(thrs.size(), thrs.type());
