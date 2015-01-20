@@ -7,7 +7,7 @@
 
 #define STRAIGHT_CORRECTION 1 //1.15
 #define TO_METERS_PER_SEC_FWD 3942.39
-#define TO_RADS_PER_SEC_ROT 750
+#define TO_RADS_PER_SEC_ROT 900
 
 class Pilot {
 public:
@@ -29,4 +29,5 @@ private:
   ros::Subscriber sub;
   sem_t mtx;
   boost::thread * publisherThread;
+  int toRadPerSec;
 };
