@@ -92,6 +92,11 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 	HoughLinesP(origSize, lines, 1, CV_PI / 180, lineVoteThrs, lineMinLen,
 			lineMaxGap);
 
+	vector<Vec4i> linesFilteredAndExtended;
+	for (int i = 0; i < lines.size(); i++)
+		if (lenght(lines.at(i)) < LINE_LEN_THRS)
+			linesFilteredAndExtended.push_back(extend(lines.at(i), LINE_EXTEND_FACTOR));
+
 	//    Mat img(cv_ptr->image);
 	//    for( size_t i = 0; i < lines.size(); i++ )
 	//	{
@@ -105,7 +110,7 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 	//	imshow("Luma", y);
 
 	vector<Polygon> linesTransformed;
-	coordTransformer->transformLines(lines, image_message->header.stamp,
+	coordTransformer->transformLines(linesFilteredAndExtended, image_message->header.stamp,
 			linesTransformed);
 
 	// Publish lines
@@ -158,6 +163,27 @@ void WallDetector::camInfoCallback(
 			new CoordTransformer(info->P[0], info->P[5], info->height,
 					info->width, "usb_cam", "robot", tfl));
 	imgSub = n.subscribe("image", 2, &WallDetector::imageCallback, this);
+}
+
+float WallDetector::lenght(Vec4i l){
+	return sqrt(pow((float)l[0]-l[1], 2) + pow((float)l[2]-l[3], 2));
+}
+
+/**
+ * Extend a line factor times around the middle point
+ */
+Vec4i WallDetector::extend(Vec4i l, float factor){
+	float x1 = l[0];
+	float x2 = l[2];
+	float y1 = l[1];
+	float y2 = l[3];
+	float lambda = ((float)(y2 - y1))/(x2 - x1);
+	Vec4i extended((x2 - x1)/2 - factor * (x2 - x1),
+			(y2 - y1)/2 - factor * lambda * (x2 - x1),
+			(x2 - x1)/2 + factor * (x2 - x1),
+			(y2 - y1)/2 + factor * lambda * (x2 - x1));
+
+	return extended;
 }
 
 int main(int argc, char ** argv) {

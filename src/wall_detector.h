@@ -14,6 +14,9 @@
 #include <boost/shared_ptr.hpp>
 #include "coord_transformer.h"
 
+#define LINE_LEN_THRS 2.0f
+#define LINE_EXTEND_FACTOR 3.0f
+
 using namespace ros;
 using namespace boost;
 
@@ -25,6 +28,9 @@ public:
 private:
 	void imageCallback(const sensor_msgs::Image::ConstPtr&);
 	void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr);
+	float lenght(Vec4i l);
+	Vec4i extend(Vec4i l, float factor);
+
 	boost::shared_ptr<CoordTransformer> coordTransformer;
 	Subscriber imgSub;
 	Subscriber infoSub;
