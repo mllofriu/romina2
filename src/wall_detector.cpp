@@ -77,7 +77,11 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 	erode(dilated, eroded, Mat(), cv::Point(-1, -1));
 
 	Mat origSize(cv_ptr->image.size(), cv_ptr->image.type());
+<<<<<<< HEAD
 	eroded.copyTo(origSize(Rect(0,cv_ptr->image.rows / 2,cv_ptr->image.cols, cv_ptr->image.rows/2)));
+=======
+	eroded.copyTo(origSize(Rect(0,cv_ptr->image.cols / 2,cv_ptr->image.rows, cv_ptr->image.cols/2)));
+>>>>>>> a22234e4ad381298c61ded7d2bc98bac81284948
 
 	cv_bridge::CvImagePtr thrsImg(new cv_bridge::CvImage);
 	thrsImg->encoding = "mono8";
