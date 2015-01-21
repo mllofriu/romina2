@@ -54,7 +54,7 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 	}
 
 	// Choose bottom half
-	Mat roi = cv_ptr->image( Rect(0,cv_ptr->image.cols / 2,cv_ptr->image.rows, cv_ptr->image.cols/2) );
+	Mat roi = cv_ptr->image(Rect(0,cv_ptr->image.rows / 2,cv_ptr->image.cols, cv_ptr->image.rows/2));
 
 	// Get Y channel
 //	Mat channels[3];
