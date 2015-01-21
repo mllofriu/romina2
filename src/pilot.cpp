@@ -18,6 +18,8 @@ Pilot::Pilot(ros::NodeHandle & n){
   sem_init(&mtx, 0, 1);
   vel = geometry_msgs::Twist();
 
+  n.param("toRadPerSec", toRadPerSec, TO_RADS_PER_SEC_ROT);
+
   // Send an initial transform with odometry 0
   odomT = tf::Transform (tf::Quaternion(tf::Vector3(0,0,1), 0));
   lastcheck = ros::Time::now();
@@ -48,7 +50,7 @@ void Pilot::velCallback(const geometry_msgs::Twist::ConstPtr& velmsg)
   // 1m, 512 -> 7.7s => 512 -> 1/7.7 m/s => tics = 512 / .12987 
   int forwardvel = -round(vel.linear.x * TO_METERS_PER_SEC_FWD);
 
-  int rotvel = vel.angular.z * TO_RADS_PER_SEC_ROT;
+  int rotvel = vel.angular.z * toRadPerSec;
 
   int vel1 = forwardvel + rotvel;
   int vel2 = (forwardvel - rotvel) * STRAIGHT_CORRECTION;
@@ -96,7 +98,7 @@ void Pilot::sendVels(int id1, int vel1, int dir1, int id2, int vel2, int dir2){
 
 void Pilot::publishOdom(){  
 
-  ros::Rate r(5);
+  ros::Rate r(10);
   while (ros::ok())
   {
     //ros::spinOnce();

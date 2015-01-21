@@ -47,7 +47,7 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 	ROS_DEBUG("Image received");
 	CvImageConstPtr cv_ptr;
 	try {
-		cv_ptr = toCvShare(image_message, image_encodings::BGR8);
+		cv_ptr = toCvShare(image_message);
 	} catch (cv_bridge::Exception& e) {
 		ROS_ERROR("cv_bridge exception: %s", e.what());
 		return;
@@ -57,24 +57,24 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 	//  Mat roi = cv_ptr->image( Rect(0,cv_ptr->image.cols / 2,cv_ptr->image.rows, cv_ptr->image.cols/2) );
 
 	// Get Y channel
-	Mat channels[3];
-	split(cv_ptr->image, &channels[0]);
-	Mat y = channels[0];
+//	Mat channels[3];
+//	split(cv_ptr->image, &channels[0]);
+//	Mat y = channels[0];
 
 	// Equalize Histogram
-	//  Mat yEq(y.size(), y.type());
-	//  equalizeHist( y, yEq );
+//  Mat yEq(y.size(), y.type());
+//  equalizeHist( y, yEq );
 
 	// Threshold
-	Mat thrs(y.size(), y.type());
-	threshold(y, thrs, imgThrs, 255, THRESH_BINARY);
+	Mat thrs(cv_ptr->image.size(), cv_ptr->image.type());
+	threshold(cv_ptr->image, thrs, imgThrs, 255, THRESH_BINARY);
 	//inRange(cv_ptr->image,Scalar(255 - imgThrs, 128 - imgThrs, 128 - imgThrs), Scalar(255, 128 + imgThrs, 128 + imgThrs), bin);
 
 	Mat dilated(thrs.size(), thrs.type());
 	dilate(thrs, dilated, Mat());
 	/// Apply the erosion operation
 	Mat eroded(dilated.size(), dilated.type());
-	erode(dilated, eroded, Mat(), cv::Point(-1, -1), 3);
+	erode(dilated, eroded, Mat(), cv::Point(-1, -1));
 
 	cv_bridge::CvImagePtr thrsImg(new cv_bridge::CvImage);
 	thrsImg->encoding = "mono8";
@@ -129,8 +129,7 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 	m.color.a = 1.0;
 	m.lifetime = Duration(1.0);
 	for (int i = 0; i < linesTransformed.size(); i++) {
-		vector<geometry_msgs::Point32> ps =
-				linesTransformed.at(i).points;
+		vector<geometry_msgs::Point32> ps = linesTransformed.at(i).points;
 		for (int j = 0; j < ps.size(); j++) {
 			Point32 p32 = ps.at(j);
 			geometry_msgs::Point p64;
