@@ -70,7 +70,7 @@ void CoordTransformer::transformLines(vector<Vec4i> & lines, ros::Time stamp,
 			if (p1.x > 0 && p2.x > 0 && lenght(p1, p2) < LINE_LEN_THRS) {
 				// Extend the line to account for possible unseen parts of it
 				Point32 p1Ext, p2Ext;
-				extendLine(p1, p2, p1Ext, p2Ext, LINE_EXTEND_FACTOR);
+				extendLine(p1, p2,pclOut.points.at(i).x, pclOut.points.at(i+1).x,  LINE_EXTEND_FACTOR, imgW, p1Ext, p2Ext);
 				pol.points.push_back(p1Ext);
 				pol.points.push_back(p2Ext);
 
@@ -100,17 +100,28 @@ Point32 CoordTransformer::intersectLine(Point32 & p, tf::Transform & t,
 /**
  * Extend a line factor times around the middle point
  */
-void CoordTransformer::extendLine(Point32 p1, Point32 p2, Point32 & p1Ext,
-		Point32 & p2Ext, float factor) {
+void CoordTransformer::extendLine(Point32 p1, Point32 p2,float factor, int img_width, int imgX1, int imgX2, Point32 & p1Ext,
+		Point32 & p2Ext) {
 	float x1 = p1.x;
 	float x2 = p2.x;
 	float y1 = p1.y;
 	float y2 = p2.y;
 	float lambda = ((float) (y2 - y1)) / (x2 - x1);
-	p1Ext.x = x1 + (x2 - x1) / 2 - factor * (x2 - x1);
-	p1Ext.y = y1 + (y2 - y1) / 2 - factor * lambda * (x2 - x1);
-	p2Ext.x = x1 + (x2 - x1) / 2 + factor * (x2 - x1);
-	p2Ext.y = y1 + (y2 - y1) / 2 + factor * lambda * (x2 - x1);
+	// Extend only the points whose x in the image is close to the boundary
+	if (imgX1 <= IMG_BOUNDARY_THRS || imgX1 >= img_width - IMG_BOUNDARY_THRS) {
+		p1Ext.x = x1 + (x2 - x1) / 2 - factor * (x2 - x1);
+		p1Ext.y = y1 + (y2 - y1) / 2 - factor * lambda * (x2 - x1);
+	} else {
+		p1Ext.x = p1.x;
+		p1Ext.y = p1.y;
+	}
+	if (imgX2 <= IMG_BOUNDARY_THRS || imgX2 >= img_width - IMG_BOUNDARY_THRS) {
+		p2Ext.x = x1 + (x2 - x1) / 2 + factor * (x2 - x1);
+		p2Ext.y = y1 + (y2 - y1) / 2 + factor * lambda * (x2 - x1);
+	} else {
+		p2Ext.x = p2.x;
+		p2Ext.y = p2.y;
+	}
 }
 
 float CoordTransformer::lenght(Point32 & p1, Point32 & p2) {
