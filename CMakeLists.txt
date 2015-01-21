@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   robot_pose_fslam
   cv_bridge
   nodelet
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -47,12 +48,11 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * uncomment the generate_messages entry below
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
-## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+# Generate messages in the 'msg' folder
+add_message_files(
+  FILES
+  PolygonsStamped.msg
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -69,10 +69,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   nav_msgs#   std_msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  geometry_msgs std_msgs
+)
 
 ###################################
 ## catkin specific configuration ##
@@ -86,7 +86,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES romina2
-#  CATKIN_DEPENDS nav_msgs roscpp std_msgs
+ CATKIN_DEPENDS roscpp std_msgs geometry_msgs message_runtime
 #  DEPENDS system_lib
 )
 
@@ -113,10 +113,6 @@ add_library(wall_detector_nodelet src/wall_detector.cpp src/coord_transformer.cp
 #add_executable(wall_detector src/wall_detector.cpp src/coord_transformer.cpp)
 
 
-## Add cmake target dependencies of the executable/library
-## as an example, message headers may need to be generated before nodes
-# add_dependencies(romina2_node romina2_generate_messages_cpp)
-
 ## Specify libraries to link a library or executable target against
 target_link_libraries(pilot_nodelet
    ${catkin_LIBRARIES}
@@ -129,6 +125,11 @@ target_link_libraries(configmotors
 #)
 
 target_link_libraries(wall_detector_nodelet ${catkin_LIBRARIES})
+
+## Add cmake target dependencies of the executable/library
+## as an example, message headers may need to be generated before nodes
+add_dependencies(wall_detector_nodelet romina2_generate_messages_cpp)
+
 #############
 ## Install ##
 #############

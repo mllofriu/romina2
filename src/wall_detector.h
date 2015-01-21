@@ -29,13 +29,14 @@ private:
 	Subscriber imgSub;
 	Subscriber infoSub;
 	Publisher markerPub;
-  Publisher thrsImgPub;
+	Publisher thrsImgPub;
+	Publisher linesPub;
 	NodeHandle n;
 	int markerId;
-  int imgThrs;
-  int lineVoteThrs;
-  int lineMinLen;
-  int lineMaxGap;
+	int imgThrs;
+	int lineVoteThrs;
+	int lineMinLen;
+	int lineMaxGap;
 };
 
 #endif /* WALLDETECTOR_H_ */

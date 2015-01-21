@@ -15,6 +15,7 @@
 #include <visualization_msgs/Marker.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include "romina2/PolygonsStamped.h"
 
 using namespace visualization_msgs;
 using namespace cv_bridge;
@@ -25,17 +26,18 @@ WallDetector::WallDetector(NodeHandle n) {
 	this->n = n;
 
 	markerPub = n.advertise<Marker>("lines", 1, false);
-  thrsImgPub = n.advertise<Image>("/thrs_imag", 1, false);  
-  
+	thrsImgPub = n.advertise<Image>("/thrs_imag", 1, false);
+	linesPub = n.advertise<romina2::PolygonsStamped>("/lines", 1, false);
+
 	markerId = 0;
 
 	infoSub = n.subscribe("camera_info", 2, &WallDetector::camInfoCallback,
 			this);
 
-  n.param("imgThrs", imgThrs, 150);
-  n.param("lineVoteThrs", lineVoteThrs, 75);
-  n.param("lineMinLen", lineMinLen, 25);
-  n.param("lineMaxGap", lineMaxGap, 30);
+	n.param("imgThrs", imgThrs, 150);
+	n.param("lineVoteThrs", lineVoteThrs, 75);
+	n.param("lineMinLen", lineMinLen, 25);
+	n.param("lineMaxGap", lineMaxGap, 30);
 }
 
 WallDetector::~WallDetector() {
@@ -51,55 +53,63 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 		return;
 	}
 
-  // Choose bottom half
-//  Mat roi = cv_ptr->image( Rect(0,cv_ptr->image.cols / 2,cv_ptr->image.rows, cv_ptr->image.cols/2) );
+	// Choose bottom half
+	//  Mat roi = cv_ptr->image( Rect(0,cv_ptr->image.cols / 2,cv_ptr->image.rows, cv_ptr->image.cols/2) );
 
-  // Get Y channel
+	// Get Y channel
 	Mat channels[3];
 	split(cv_ptr->image, &channels[0]);
 	Mat y = channels[0];
-  
-  // Equalize Histogram
-//  Mat yEq(y.size(), y.type());
-//  equalizeHist( y, yEq );
 
-  // Threshold
+	// Equalize Histogram
+	//  Mat yEq(y.size(), y.type());
+	//  equalizeHist( y, yEq );
+
+	// Threshold
 	Mat thrs(y.size(), y.type());
 	threshold(y, thrs, imgThrs, 255, THRESH_BINARY);
-  //inRange(cv_ptr->image,Scalar(255 - imgThrs, 128 - imgThrs, 128 - imgThrs), Scalar(255, 128 + imgThrs, 128 + imgThrs), bin);
+	//inRange(cv_ptr->image,Scalar(255 - imgThrs, 128 - imgThrs, 128 - imgThrs), Scalar(255, 128 + imgThrs, 128 + imgThrs), bin);
 
-  Mat dilated(thrs.size(), thrs.type());
-  dilate(thrs, dilated, Mat());
-  /// Apply the erosion operation
-  Mat eroded(dilated.size(), dilated.type());
-  erode(dilated, eroded, Mat(), cv::Point(-1,-1), 3);
+	Mat dilated(thrs.size(), thrs.type());
+	dilate(thrs, dilated, Mat());
+	/// Apply the erosion operation
+	Mat eroded(dilated.size(), dilated.type());
+	erode(dilated, eroded, Mat(), cv::Point(-1, -1), 3);
 
-
-  cv_bridge::CvImagePtr thrsImg(new cv_bridge::CvImage);
-  thrsImg->encoding = "mono8";
-  thrsImg->image = thrs;
-  thrsImgPub.publish(thrsImg->toImageMsg());
+	cv_bridge::CvImagePtr thrsImg(new cv_bridge::CvImage);
+	thrsImg->encoding = "mono8";
+	thrsImg->image = eroded;
+	thrsImgPub.publish(thrsImg->toImageMsg());
 
 	//Mat cann(thrs.size(), thrs.type());
 	//Canny(thrs, cann, 0, 200);
 
 	vector<Vec4i> lines;
-	HoughLinesP(eroded, lines, 1, CV_PI / 180, lineVoteThrs, lineMinLen, lineMaxGap);
+	HoughLinesP(eroded, lines, 1, CV_PI / 180, lineVoteThrs, lineMinLen,
+			lineMaxGap);
 
-//    Mat img(cv_ptr->image);
-//    for( size_t i = 0; i < lines.size(); i++ )
-//	{
-//		line( img, cv::Point(lines[i][0], lines[i][1]),
-//			cv::Point(lines[i][2], lines[i][3]), Scalar(0,0,255), 3, 8 );
-//	}
+	//    Mat img(cv_ptr->image);
+	//    for( size_t i = 0; i < lines.size(); i++ )
+	//	{
+	//		line( img, cv::Point(lines[i][0], lines[i][1]),
+	//			cv::Point(lines[i][2], lines[i][3]), Scalar(0,0,255), 3, 8 );
+	//	}
 
-//	imshow("Lines", img);
-//	imshow("Canny", cann);
-//	imshow("Thrs", thrs);
-//	imshow("Luma", y);
+	//	imshow("Lines", img);
+	//	imshow("Canny", cann);
+	//	imshow("Thrs", thrs);
+	//	imshow("Luma", y);
 
-	vector<PolygonStamped> linesTransformed;
-	coordTransformer->transformLines(lines, image_message->header.stamp, linesTransformed);
+	vector<Polygon> linesTransformed;
+	coordTransformer->transformLines(lines, image_message->header.stamp,
+			linesTransformed);
+
+	// Publish lines
+	romina2::PolygonsStamped pols;
+	pols.header.stamp = image_message->header.stamp;
+	pols.header.frame_id = "map";
+	pols.polygons = linesTransformed;
+	linesPub.publish(pols);
 
 	// Publish visual lines
 	Marker m;
@@ -118,9 +128,10 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 	m.color.b = 1.0;
 	m.color.a = 1.0;
 	m.lifetime = Duration(1.0);
-	for (int i = 0; i < linesTransformed.size(); i++){
-		vector<geometry_msgs::Point32> ps = linesTransformed.at(i).polygon.points;
-		for (int j = 0; j < ps.size(); j++){
+	for (int i = 0; i < linesTransformed.size(); i++) {
+		vector<geometry_msgs::Point32> ps =
+				linesTransformed.at(i).points;
+		for (int j = 0; j < ps.size(); j++) {
 			Point32 p32 = ps.at(j);
 			geometry_msgs::Point p64;
 			p64.x = p32.x;

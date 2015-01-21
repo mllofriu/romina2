@@ -11,7 +11,7 @@
 #include <string>
 #include <tf/transform_listener.h>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <geometry_msgs/PolygonStamped.h>
+#include <geometry_msgs/Polygon.h>
 #include <geometry_msgs/Point32.h>
 
 using namespace std;
@@ -26,7 +26,7 @@ public:
 	CoordTransformer(float fx, float fy, float imgH, float imgW,
 			string srcFrame, string dstFrame, TransformListener * tfl);
 	void transformLines(vector<Vec4i> & lines, ros::Time stamp,
-			vector<PolygonStamped> & transformedLines);
+			vector<Polygon> & transformedLines);
 	virtual ~CoordTransformer();
 
 private:

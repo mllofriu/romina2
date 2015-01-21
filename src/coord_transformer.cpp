@@ -22,7 +22,7 @@ CoordTransformer::CoordTransformer(float fx, float fy, float imgH, float imgW,
 }
 
 void CoordTransformer::transformLines(vector<Vec4i> & lines, ros::Time stamp,
-		vector<PolygonStamped> & transformedLines) {
+		vector<Polygon> & transformedLines) {
 	// Take each endpoint in the detected lines and
 	// Find a point in the line of proyection to the object (3d) intersecting with the lens plane
 	vector<Point32> points;
@@ -59,23 +59,21 @@ void CoordTransformer::transformLines(vector<Vec4i> & lines, ros::Time stamp,
 
 		// Proyect each line and intersect with the floor
 		// Build a polygon with each proyected line
-		vector<PolygonStamped> polygons;
+		vector<Polygon> polygons;
 		for (int i = 0; i < pclOut.points.size(); i += 2) {
-			PolygonStamped pol;
-			pol.header.stamp = stamp;
-			pol.header.frame_id = dstFrame;
-      Point32 p1 = intersectLine(pclOut.points.at(i), t, 0.05f);
-      Point32 p2 = intersectLine(pclOut.points.at(i+1), t, 0.05f);
-      
-      // Check that the detected points are valid
-      // Camera could never detect something behind the robot
-      // but the assumption of z == 0.05 could produce this
-      if (p1.x > 0 && p2.x > 0){
-			  pol.polygon.points.push_back(p1);
-			  pol.polygon.points.push_back(p2);
+			Polygon pol;
+			Point32 p1 = intersectLine(pclOut.points.at(i), t, 0.05f);
+			Point32 p2 = intersectLine(pclOut.points.at(i + 1), t, 0.05f);
 
-			  transformedLines.push_back(pol);
-      }
+			// Check that the detected points are valid
+			// Camera could never detect something behind the robot
+			// but the assumption of z == 0.05 could produce this
+			if (p1.x > 0 && p2.x > 0) {
+				pol.points.push_back(p1);
+				pol.points.push_back(p2);
+
+				transformedLines.push_back(pol);
+			}
 		}
 	} catch (tf::TransformException ex) {
 		ROS_ERROR("%s", ex.what());
@@ -86,9 +84,11 @@ void CoordTransformer::transformLines(vector<Vec4i> & lines, ros::Time stamp,
 /***
  * Intersects the line formed by [t.getORigin, p] with the plane z=0
  */
-Point32 CoordTransformer::intersectLine(Point32 & p, tf::Transform & t, float knownZ) {
+Point32 CoordTransformer::intersectLine(Point32 & p, tf::Transform & t,
+		float knownZ) {
 	Point32 pT;
-	float paramLambda = (knownZ - t.getOrigin().getZ()) / (p.z - t.getOrigin().getZ());
+	float paramLambda = (knownZ - t.getOrigin().getZ())
+			/ (p.z - t.getOrigin().getZ());
 	pT.x = t.getOrigin().getX() + paramLambda * (p.x - t.getOrigin().getX());
 	pT.y = t.getOrigin().getY() + paramLambda * (p.y - t.getOrigin().getY());
 	pT.z = 0;
