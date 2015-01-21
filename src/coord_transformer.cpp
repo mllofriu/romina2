@@ -64,13 +64,15 @@ void CoordTransformer::transformLines(vector<Vec4i> & lines, ros::Time stamp,
 			Polygon pol;
 			Point32 p1 = intersectLine(pclOut.points.at(i), t, 0.05f);
 			Point32 p2 = intersectLine(pclOut.points.at(i + 1), t, 0.05f);
-
 			// Check that the detected points are valid
 			// Camera could never detect something behind the robot
 			// but the assumption of z == 0.05 could produce this
-			if (p1.x > 0 && p2.x > 0) {
-				pol.points.push_back(p1);
-				pol.points.push_back(p2);
+			if (p1.x > 0 && p2.x > 0 && lenght(p1,p2) < LINE_LEN_THRS) {
+				// Extend the line to account for possible unseen parts of it
+				Point32 p1Ext, p2Ext;
+				extendLine(p1,p2,p1Ext,p2Ext, LINE_EXTEND_FACTOR);
+				pol.points.push_back(p1Ext);
+				pol.points.push_back(p2Ext);
 
 				transformedLines.push_back(pol);
 			}
@@ -93,6 +95,26 @@ Point32 CoordTransformer::intersectLine(Point32 & p, tf::Transform & t,
 	pT.y = t.getOrigin().getY() + paramLambda * (p.y - t.getOrigin().getY());
 	pT.z = 0;
 	return pT;
+}
+
+/**
+ * Extend a line factor times around the middle point
+ */
+void CoordTransformer::extendLine(Point32 p1,Point32 p2,Point32 & p1Ext,Point32 & p2Ext, float factor){
+	float x1 = p1.x;
+	float x2 = p2.x;
+	float y1 = p1.y;
+	float y2 = p2.y;
+	float lambda = ((float)(y2 - y1))/(x2 - x1);
+	p1Ext.x = (x2 - x1)/2 - factor * (x2 - x1);
+	p1Ext.y = (y2 - y1)/2 - factor * lambda * (x2 - x1);
+	p2Ext.x = (x2 - x1)/2 + factor * (x2 - x1);
+	p2Ext.y = (y2 - y1)/2 + factor * lambda * (x2 - x1);
+}
+
+
+float CoordTransformer::lenght(Point32 & p1,Point32 & p2){
+	return sqrt(pow((float)p1.x-p2.x, 2) + pow((float)p1.y-p2.y, 2));
 }
 
 CoordTransformer::~CoordTransformer() {

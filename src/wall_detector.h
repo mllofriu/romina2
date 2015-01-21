@@ -25,6 +25,7 @@ public:
 private:
 	void imageCallback(const sensor_msgs::Image::ConstPtr&);
 	void camInfoCallback(const sensor_msgs::CameraInfo::ConstPtr);
+
 	boost::shared_ptr<CoordTransformer> coordTransformer;
 	Subscriber imgSub;
 	Subscriber infoSub;

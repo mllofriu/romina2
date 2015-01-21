@@ -14,6 +14,9 @@
 #include <geometry_msgs/Polygon.h>
 #include <geometry_msgs/Point32.h>
 
+#define LINE_EXTEND_FACTOR 3.0f
+#define LINE_LEN_THRS 2.0f
+
 using namespace std;
 using namespace tf;
 using namespace cv;
@@ -31,6 +34,8 @@ public:
 
 private:
 	Point32 intersectLine(Point32 & p, tf::Transform & t, float knownZ);
+	void extendLine(Point32 p1,Point32 p2,Point32 & p1Ext,Point32 & p2Ext, float factor);
+	float lenght(Point32 & p1,Point32 & p2);
 
 	float fx, fy, imgH, imgW;
 	string srcFrame, dstFrame;
