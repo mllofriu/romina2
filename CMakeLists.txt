@@ -111,6 +111,7 @@ add_library(pilot_nodelet src/pilot.cpp src/serialport.cpp)
 add_executable(configmotors src/configmotors.cpp src/serialport.cpp)
 add_library(wall_detector_nodelet src/wall_detector.cpp src/coord_transformer.cpp src/wall_detector_nodelet.cpp)
 add_executable(wall_detector src/wall_detector.cpp src/coord_transformer.cpp)
+add_executable(img_thrs src/img_thrs.cpp)
 
 
 ## Specify libraries to link a library or executable target against
@@ -121,6 +122,9 @@ target_link_libraries(configmotors
    ${catkin_LIBRARIES}
 )
 target_link_libraries(wall_detector
+   ${catkin_LIBRARIES}
+)
+target_link_libraries(img_thrs
    ${catkin_LIBRARIES}
 )
 
@@ -146,11 +150,11 @@ add_dependencies(wall_detector_nodelet romina2_generate_messages_cpp)
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS romina2 romina2_node
-#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+install(TARGETS wall_detector wall_detector_nodelet pilot_nodelet
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 ## Mark cpp header files for installation
 # install(DIRECTORY include/${PROJECT_NAME}/
@@ -159,12 +163,13 @@ add_dependencies(wall_detector_nodelet romina2_generate_messages_cpp)
 #   PATTERN ".svn" EXCLUDE
 # )
 
-## Mark other files for installation (e.g. launch and bag files, etc.)
-# install(FILES
-#   # myfile1
-#   # myfile2
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
+# Mark other files for installation (e.g. launch and bag files, etc.)
+install(FILES
+  launch/nodelets.launch
+  launch/nodeletsJustSensing.launch
+  # myfile2
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
 
 #############
 ## Testing ##
