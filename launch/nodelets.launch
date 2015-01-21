@@ -35,13 +35,13 @@
 
 	<node pkg="nodelet" type="nodelet" name="ar_pose" args="load ar_pose/ARMultiNodelet manager">
 		<param name="marker_pattern_list" type="string" value="$(find romina2)/patterns/column_markers"/>
-		<param name="threshold" type="int" value="175"/>
+		<param name="threshold" type="int" value="100"/>
 		<param name="publish_tf" type="bool" value="true"/> 
 		<remap to="/cam/camera_info" from="/usb_cam/camera_info" />
 		<remap to="/cam/image_raw" from="/usb_cam/image_raw" />
 	</node>
 
-
+<!--
   <node pkg="nodelet" type="nodelet" name="wall_detector" args="load romina2/WallDetectorNodelet manager" output="screen">
     <param name="imgThrs" value="150"/>
     <param name="lineVoteThrs" value="50"/>
@@ -50,7 +50,7 @@
     <remap to="/cam/camera_info" from="~camera_info" />
     <remap to="/cam/image_raw" from="~image" />
   </node>
-
+-->
   <node pkg="nodelet" type="nodelet" name="robot_pose_fslam" args="load robot_pose_fslam/FSLAMNodelet manager" output="screen">
     <param name="robotFrame" value="robot"/>
   </node>
