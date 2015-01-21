@@ -14,9 +14,10 @@
 #include <geometry_msgs/Polygon.h>
 #include <geometry_msgs/Point32.h>
 
-#define LINE_EXTEND_FACTOR 3.0f
-#define LINE_LEN_THRS 2.0f
+#define LINE_EXTEND_FACTOR 2.0f
+#define LINE_LEN_THRS 1.0f
 #define IMG_BOUNDARY_THRS 10
+#define LINE_MAX_DIST 1.2f
 
 using namespace std;
 using namespace tf;
@@ -35,8 +36,9 @@ public:
 
 private:
 	Point32 intersectLine(Point32 & p, tf::Transform & t, float knownZ);
-	void extendLine(Point32 p1,Point32 p2, float factor, int img_width, int imgX1, int imgX2, Point32 & p1Ext,Point32 & p2Ext);
-	float lenght(Point32 & p1,Point32 & p2);
+	void extendLine(Point32 p1, Point32 p2, int imgX1, int imgX2, float factor,
+			int img_width, Point32 & p1Ext, Point32 & p2Ext);
+	float lenght(Point32 & p1, Point32 & p2);
 
 	float fx, fy, imgH, imgW;
 	string srcFrame, dstFrame;

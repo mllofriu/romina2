@@ -67,7 +67,8 @@ void CoordTransformer::transformLines(vector<Vec4i> & lines, ros::Time stamp,
 			// Check that the detected points are valid
 			// Camera could never detect something behind the robot
 			// but the assumption of z == 0.05 could produce this
-			if (p1.x > 0 && p2.x > 0 && lenght(p1, p2) < LINE_LEN_THRS) {
+			// points x must be close enough, if not: vertical line in the image
+			if (p1.x > 0 && p2.x > 0/* && lenght(p1, p2) < LINE_LEN_THRS*/ ) {
 				// Extend the line to account for possible unseen parts of it
 				Point32 p1Ext, p2Ext;
 				extendLine(p1, p2,pclOut.points.at(i).x, pclOut.points.at(i+1).x,  LINE_EXTEND_FACTOR, imgW, p1Ext, p2Ext);
@@ -100,7 +101,7 @@ Point32 CoordTransformer::intersectLine(Point32 & p, tf::Transform & t,
 /**
  * Extend a line factor times around the middle point
  */
-void CoordTransformer::extendLine(Point32 p1, Point32 p2,float factor, int img_width, int imgX1, int imgX2, Point32 & p1Ext,
+void CoordTransformer::extendLine(Point32 p1, Point32 p2,int imgX1, int imgX2,float factor, int img_width,  Point32 & p1Ext,
 		Point32 & p2Ext) {
 	float x1 = p1.x;
 	float x2 = p2.x;

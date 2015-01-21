@@ -26,7 +26,7 @@ WallDetector::WallDetector(NodeHandle n) {
 	this->n = n;
 
 	markerPub = n.advertise<Marker>("lines", 1, false);
-	thrsImgPub = n.advertise<Image>("/thrs_imag", 1, false);
+	thrsImgPub = n.advertise<Image>("/wall_detector_image", 1, false);
 	linesPub = n.advertise<romina2::PolygonsStamped>("/lines", 1, false);
 
 	markerId = 0;
