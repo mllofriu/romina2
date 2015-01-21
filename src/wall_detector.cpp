@@ -54,7 +54,7 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 	}
 
 	// Choose bottom half
-	//  Mat roi = cv_ptr->image( Rect(0,cv_ptr->image.cols / 2,cv_ptr->image.rows, cv_ptr->image.cols/2) );
+	Mat roi = cv_ptr->image( Rect(0,cv_ptr->image.cols / 2,cv_ptr->image.rows, cv_ptr->image.cols/2) );
 
 	// Get Y channel
 //	Mat channels[3];
@@ -66,8 +66,8 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 //  equalizeHist( y, yEq );
 
 	// Threshold
-	Mat thrs(cv_ptr->image.size(), cv_ptr->image.type());
-	threshold(cv_ptr->image, thrs, imgThrs, 255, THRESH_BINARY);
+	Mat thrs(roi.size(), roi.type());
+	threshold(roi, thrs, imgThrs, 255, THRESH_BINARY);
 	//inRange(cv_ptr->image,Scalar(255 - imgThrs, 128 - imgThrs, 128 - imgThrs), Scalar(255, 128 + imgThrs, 128 + imgThrs), bin);
 
 	Mat dilated(thrs.size(), thrs.type());
@@ -76,16 +76,19 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 	Mat eroded(dilated.size(), dilated.type());
 	erode(dilated, eroded, Mat(), cv::Point(-1, -1));
 
+	Mat origSize(cv_ptr->image.size(), cv_ptr->image.type());
+	eroded.copyTo(origSize(Rect(0,cv_ptr->image.rows / 2,cv_ptr->image.cols, cv_ptr->image.rows/2)));
+
 	cv_bridge::CvImagePtr thrsImg(new cv_bridge::CvImage);
 	thrsImg->encoding = "mono8";
-	thrsImg->image = eroded;
+	thrsImg->image = origSize;
 	thrsImgPub.publish(thrsImg->toImageMsg());
 
 	//Mat cann(thrs.size(), thrs.type());
 	//Canny(thrs, cann, 0, 200);
 
 	vector<Vec4i> lines;
-	HoughLinesP(eroded, lines, 1, CV_PI / 180, lineVoteThrs, lineMinLen,
+	HoughLinesP(origSize, lines, 1, CV_PI / 180, lineVoteThrs, lineMinLen,
 			lineMaxGap);
 
 	//    Mat img(cv_ptr->image);
