@@ -48,7 +48,7 @@ void imageCallback(const Image::ConstPtr& image_message) {
 }
 
 int main(int argc, char ** argv) {
-	init(argc, argv, "wall_detector");
+	init(argc, argv, "img_thrs");
 	NodeHandle n;
 	n.param("imgThrs", imgThrs, 150);
 	thrsImgPub = n.advertise<Image>("/thrs_img", 1, false);
