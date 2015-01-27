@@ -1,11 +1,6 @@
 <launch>
-	<arg name="gui" default="False" />
-	<param name="robot_description" textfile="$(find romina2)/urdf/robot.urdf" />
-	<param name="use_gui" value="$(arg gui)"/>
-	<node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
-	<node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
-
-	<node pkg="robot_pose_fslam" type="robot_pose_fslam" name="slam" output="screen">
-    	<param name="robotFrame" value="robot"/>
-  	</node>
+  <node pkg="nodelet" type="nodelet" name="robot_pose_fslam" args="standalone robot_pose_fslam/FSLAMNodelet" output="screen" required="true">
+    <param name="robotFrame" value="robot"/>
+  </node>
+  
 </launch>
