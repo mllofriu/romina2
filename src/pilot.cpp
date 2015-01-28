@@ -145,20 +145,15 @@ void Pilot::publishOdom() {
 
 		// Modify the movement transform
 		if (movingByService) {
-			//movedOdomT.mult(movedOdomT, change);
-			// Integrate x movement and rotation separately
-			tf::Vector3 movedO = movedOdomT.getOrigin();
-			movedO.setX(movedO.getX() + change.getOrigin().getX());
-			tf::Quaternion movedRot = movedOdomT.getRotation();
-			movedRot = movedRot * change.getRotation();
-			movedOdomT.setOrigin(movedO);
-			movedOdomT.setRotation(movedRot);
+			movedOdomT.mult(movedOdomT, change);
 			// Find difference
 			tf::Transform remaining = movedOdomT.inverse();
 			remaining.mult(toMoveOdomT, remaining);
 			sem_wait(&mtx);
-			vel.linear.x = pTranslation * remaining.getOrigin().getX();
-			vel.angular.z = pRotation * remaining.getRotation().getAngle();
+			if (toMoveOdomT.getOrigin().getX() != 0)
+				vel.linear.x = pTranslation * remaining.getOrigin().getX();
+			else
+				vel.angular.z = pRotation * remaining.getRotation().getAngle();
 			processVel(vel);
 			sem_post(&mtx);
 		}

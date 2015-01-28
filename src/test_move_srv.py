@@ -22,4 +22,4 @@ def move(trans, rot):
 
 
 if __name__ == "__main__":
-    move(1, 0)
+    move(.2, 0  )
