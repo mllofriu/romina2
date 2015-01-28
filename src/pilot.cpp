@@ -2,6 +2,7 @@
 #include "pilot.h"
 
 #include <boost/thread.hpp>
+#include <tf/tf.h>
 
 
 #define MOTOR1 16
@@ -30,12 +31,28 @@ Pilot::Pilot(ros::NodeHandle & n){
 
   publisherThread = new boost::thread(boost::bind( &Pilot::publishOdom, this ));
   
+  movingByService = false;
+  n.getParam("pTranslation", pTranslation);
+  n.getParam("pRotation", pRotation);
+  ros::ServiceServer service = n.advertiseService("move", &Pilot::move, this);
+  ROS_INFO("Service ready.");
 }
 
 Pilot::~Pilot(){
   sendVels(MOTOR1,0,0, MOTOR2,0,0);
   serialPort.disconnect();
 }
+
+bool Pilot::move(romina2::Move::Request &req, romina2::Move::Response &res){
+	sem_wait(&mtx);
+	tf::transformMsgToTF(req.movement,toMoveOdomT);
+	movedOdomT = tf::Transform();
+	movingByService = true;
+	sem_post(&mtx);
+
+	return true;
+}
+
 /**
  * This tutorial demonstrates simple receipt of messages over the ROS system.
  */
@@ -45,6 +62,8 @@ void Pilot::velCallback(const geometry_msgs::Twist::ConstPtr& velmsg)
 
   sem_wait(&mtx);
   vel = *velmsg;
+  // Cancels moving by service
+  movingByService = false;
   sem_post(&mtx);  
 
   // 1m, 512 -> 7.7s => 512 -> 1/7.7 m/s => tics = 512 / .12987 
@@ -118,9 +137,27 @@ void Pilot::publishOdom(){
 
     change.setOrigin(o);
     change.setRotation(rot);
-    // Modify the transform
+    // Modify the odometry transform
     odomT.mult(odomT, change);
 
+    // Modify the movement transform
+    if (movingByService){
+    	//movedOdomT.mult(movedOdomT, change);
+    	// Integrate x movement and rotation separately
+    	tf::Vector3 movedO = movedOdomT.getOrigin();
+    	movedO.setX(movedO.getX() + change.getOrigin().getX());
+    	tf::Quaternion movedRot = movedOdomT.getRotation();
+    	movedRot = movedRot * change.getRotation();
+    	movedOdomT.setOrigin(movedO);
+    	movedOdomT.setRotation(movedRot);
+    	// Find difference
+    	tf::Transform remaining = movedOdomT.inverse();
+    	remaining.mult(toMoveOdomT, remaining);
+    	sem_wait(&mtx);
+    	vel.linear.x = pTranslation * remaining.getOrigin().getX();
+    	vel.angular.z = pRotation * remaining.getRotation().getAngle();
+    	sem_post(&mtx);
+    }
     //Republish the transform
     lastcheck = tNow;
     tfbr.sendTransform(tf::StampedTransform(odomT, tNow, "map", "odom"));

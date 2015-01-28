@@ -55,11 +55,10 @@ add_message_files(
 )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+  FILES
+  Move.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -134,6 +133,7 @@ target_link_libraries(wall_detector ${catkin_LIBRARIES})
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 add_dependencies(wall_detector_nodelet romina2_generate_messages_cpp)
+add_dependencies(pilot_nodelet romina2_generate_messages_cpp)
 
 #############
 ## Install ##
