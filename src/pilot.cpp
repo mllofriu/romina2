@@ -147,13 +147,16 @@ void Pilot::publishOdom() {
 		if (movingByService) {
 			movedOdomT.mult(movedOdomT, change);
 			// Find difference
-			tf::Transform remaining = movedOdomT.inverse();
-			remaining.mult(toMoveOdomT, remaining);
+			tf::Transform remaining = movedOdomT.inverse() * toMoveOdomT;
+			ROS_INFO("Remaining X %d", remaining.getOrigin().getX());
 			sem_wait(&mtx);
-			if (toMoveOdomT.getOrigin().getX() != 0)
+			if (toMoveOdomT.getOrigin().getX() != 0){
+				ROS_INFO("Vel linear %d", remaining.getOrigin().getX());
 				vel.linear.x = pTranslation * remaining.getOrigin().getX();
-			else
+			} else {
 				vel.angular.z = pRotation * remaining.getRotation().getAngle();
+				ROS_INFO("Vel angular %d", remaining.getRotation().getAngle());
+			}
 			processVel(vel);
 			sem_post(&mtx);
 		}
