@@ -21,10 +21,12 @@ public:
 private:
 	char chksum(unsigned char* data, int length);
 	void sendVels(int id1, int vel1, int dir1, int id2, int vel2, int dir2);
+	void processVel(const geometry_msgs::Twist & vel);
 
 	SerialPort serialPort;
 	geometry_msgs::Twist vel;
 	// Odom publisher variables
+	ros::ServiceServer moveService;
 	ros::Time lastcheck;
 	tf::TransformBroadcaster tfbr;
 	tf::Transform odomT;
