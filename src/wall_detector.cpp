@@ -54,7 +54,7 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 	}
 
 	// Choose bottom half
-	Mat roi = cv_ptr->image(Rect(0,cv_ptr->image.rows / 2,cv_ptr->image.cols, cv_ptr->image.rows/2));
+	Mat roi = cv_ptr->image(Rect(0,cv_ptr->image.rows / 4,cv_ptr->image.cols,3* cv_ptr->image.rows/4));
 
 	// Get Y channel
 //	Mat channels[3];
@@ -78,7 +78,7 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 
 	Mat origSize(cv_ptr->image.size(), cv_ptr->image.type());
 	origSize = Scalar(0);
-	eroded.copyTo(origSize(Rect(0,cv_ptr->image.rows / 2,cv_ptr->image.cols, cv_ptr->image.rows/2)));
+	eroded.copyTo(origSize(Rect(0,cv_ptr->image.rows / 4,cv_ptr->image.cols, 3*cv_ptr->image.rows/4)));
 
 	cv_bridge::CvImagePtr thrsImg(new cv_bridge::CvImage);
 	thrsImg->encoding = "mono8";
@@ -92,17 +92,17 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 	HoughLinesP(origSize, lines, 1, CV_PI / 180, lineVoteThrs, lineMinLen,
 			lineMaxGap);
 
-	//    Mat img(cv_ptr->image);
-	//    for( size_t i = 0; i < lines.size(); i++ )
-	//	{
-	//		line( img, cv::Point(lines[i][0], lines[i][1]),
-	//			cv::Point(lines[i][2], lines[i][3]), Scalar(0,0,255), 3, 8 );
-	//	}
-
-	//	imshow("Lines", img);
-	//	imshow("Canny", cann);
-	//	imshow("Thrs", thrs);
-	//	imshow("Luma", y);
+//	    Mat img(cv_ptr->image);
+//	    for( size_t i = 0; i < lines.size(); i++ )
+//		{
+//			line( img, cv::Point(lines[i][0], lines[i][1]),
+//				cv::Point(lines[i][2], lines[i][3]), Scalar(0,0,255), 3, 8 );
+//		}
+//
+//		imshow("Lines", img);
+////		imshow("Canny", cann);
+//		imshow("Thrs", thrs);
+////		imshow("Luma", y);
 
 	vector<Polygon> linesTransformed;
 	coordTransformer->transformLines(lines, image_message->header.stamp,
@@ -145,7 +145,7 @@ void WallDetector::imageCallback(const Image::ConstPtr& image_message) {
 	}
 	markerPub.publish(m);
 
-	//waitKey(3);
+//	waitKey(3);
 }
 
 void WallDetector::camInfoCallback(

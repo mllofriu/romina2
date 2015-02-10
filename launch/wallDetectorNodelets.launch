@@ -6,8 +6,8 @@
 
 
   <node pkg="nodelet" type="nodelet" name="wall_detector" args="load romina2/WallDetectorNodelet managerWall" output="screen">
-    <param name="imgThrs" value="150"/>
-    <param name="lineVoteThrs" value="25"/>
+    <param name="imgThrs" value="70"/>
+    <param name="lineVoteThrs" value="50"/>
     <param name="lineMinLen" value="10"/>
     <param name="lineMaxGap" value="30"/>
     <remap to="/cam/camera_info" from="~camera_info" />

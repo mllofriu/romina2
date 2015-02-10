@@ -15,7 +15,7 @@
 #include <geometry_msgs/Point32.h>
 
 #define LINE_EXTEND_FACTOR 2.0f
-#define LINE_LEN_THRS 1.0f
+#define LINE_LEN_THRS 2.0f
 #define IMG_BOUNDARY_THRS 10
 #define LINE_MAX_DIST 1.2f
 
